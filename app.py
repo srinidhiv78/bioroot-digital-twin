@@ -15,7 +15,8 @@ if "screen" not in st.session_state:
 
 if "initialized" not in st.session_state:
     st.session_state.initialized = False
-
+if "facility_data" not in st.session_state:
+    st.session_state.facility_data = {}
 
 # =========================================================
 # CUSTOM STYLING
@@ -338,13 +339,36 @@ if st.session_state.screen == "Industry Portal":
         "BIOROOT optimization and digital-twin environment."
     )
 
-    if st.button(
-        "🚀 INITIALIZE BIOROOT DIGITAL TWIN",
-        use_container_width=True
-    ):
+if st.button(
+    "🚀 INITIALIZE BIOROOT DIGITAL TWIN",
+    use_container_width=True
+):
 
-        st.session_state.initialized = True
+    st.session_state.facility_data = {
+        "facility_id": facility_id,
+        "application": application,
+        "operating_hours": operating_hours,
+        "pipe_diameter": pipe_diameter,
+        "pipe_length": pipe_length,
+        "flow_rate": flow_rate,
+        "temperature": temperature,
+        "operating_pressure": operating_pressure,
+        "treatment_priority": treatment_priority,
+        "phosphate": phosphate,
+        "dye_concentration": dye_concentration,
+        "organic_load": organic_load
+    }
 
+    st.session_state.initialized = True
+
+    st.success(
+        f"Facility {facility_id} successfully configured. "
+        "Digital-twin environment initialized."
+    )
+
+    st.session_state.screen = "Optimized Prediction"
+
+    st.rerun()
         st.success(
             f"Facility {facility_id} successfully configured. "
             "Digital-twin environment initialized."
