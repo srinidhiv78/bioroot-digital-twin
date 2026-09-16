@@ -2335,8 +2335,8 @@ st.subheader("🧠 Performance Intelligence")
 future_health = performance_df.iloc[-1][
   "System Health"
         ]
-        future_phosphate = performance_df.iloc[-1][
-            "Phosphate Removal"
+future_phosphate = performance_df.iloc[-1][
+  "Phosphate Removal"
         ]
 
         if future_health > 85:
