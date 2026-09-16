@@ -2748,11 +2748,11 @@ elif st.session_state.screen == "Scenario Simulator":
         # -----------------------------
         # SYSTEM STATE
         # -----------------------------
-        # -----------------------------
-        # VIRTUAL ROOT ARCHITECTURE
+         # -----------------------------
+        # DYNAMIC ROOT ARCHITECTURE
         # -----------------------------
 
-        st.subheader("🌿 Optimized Root Architecture")
+        st.subheader("🌿 Live Root Reactor")
 
         branch_count = int(
             design_data.get(
@@ -2776,123 +2776,317 @@ elif st.session_state.screen == "Scenario Simulator":
             10
         )
 
+        # Flow controls animation speed
+        animation_duration = max(
+            0.35,
+            min(
+                1.8,
+                100 / max(
+                    scenario_flow,
+                    10
+                )
+            )
+        )
+
+        # Pollutant loading controls particle density
+        particle_count = int(
+            min(
+                18,
+                max(
+                    5,
+                    pollutant_load / 8
+                )
+            )
+        )
+
+        # Treatment efficiency controls outlet particle visibility
+        outlet_particles = int(
+            particle_count
+            * (
+                1
+                - simulated_phosphate / 100
+            )
+        )
+
+        inlet_particles = ""
+
+        for i in range(particle_count):
+
+            left_position = (
+                5
+                + (i * 6) % 85
+            )
+
+            delay = (
+                i * 0.15
+            )
+
+            inlet_particles += f"""
+            <span
+                class="particle"
+                style="
+                    left:{left_position}%;
+                    animation-delay:{delay}s;
+                "
+            ></span>
+            """
+
+        outlet_particle_html = ""
+
+        for i in range(
+            max(
+                1,
+                outlet_particles
+            )
+        ):
+
+            left_position = (
+                10
+                + (i * 13) % 80
+            )
+
+            delay = (
+                i * 0.2
+            )
+
+            outlet_particle_html += f"""
+            <span
+                class="outlet-particle"
+                style="
+                    left:{left_position}%;
+                    animation-delay:{delay}s;
+                "
+            ></span>
+            """
+
         root_html = f"""
         <style>
 
-        .root-system {{
-            background: #0b1220;
-            border-radius: 15px;
-            padding: 20px;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
+        .reactor {{
+            background:#0b1220;
+            border-radius:16px;
+            padding:20px;
+            color:white;
+            font-family:Arial,sans-serif;
         }}
 
-        .root-title {{
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 12px;
+        .reactor-title {{
+            text-align:center;
+            font-size:18px;
+            font-weight:bold;
+            margin-bottom:15px;
         }}
 
-        .root-network {{
-            position: relative;
-            height: 230px;
-            max-width: 700px;
-            margin: auto;
+        .flow-zone {{
+            position:relative;
+            height:330px;
+            overflow:hidden;
+            border-radius:12px;
+            background:#111827;
+        }}
+
+        .water-flow {{
+            position:absolute;
+            left:47%;
+            top:-20px;
+            width:70px;
+            height:370px;
+            background:rgba(56,189,248,0.12);
+            border-left:2px solid rgba(56,189,248,0.35);
+            border-right:2px solid rgba(56,189,248,0.35);
         }}
 
         .trunk {{
-            position: absolute;
-            width: 12px;
-            height: 170px;
-            background: #22c55e;
-            left: 50%;
-            top: 25px;
-            transform: translateX(-50%);
-            border-radius: 10px;
-            box-shadow: 0 0 14px rgba(34,197,94,0.5);
+            position:absolute;
+            left:50%;
+            top:35px;
+            width:14px;
+            height:250px;
+            transform:translateX(-50%);
+            background:#22c55e;
+            border-radius:10px;
+            box-shadow:0 0 15px rgba(34,197,94,0.5);
         }}
 
         .branch {{
-            position: absolute;
-            height: 7px;
-            width: 150px;
-            background: #38bdf8;
-            left: 50%;
-            top: 65px;
-            transform-origin: left center;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(56,189,248,0.45);
+            position:absolute;
+            left:50%;
+            height:7px;
+            width:145px;
+            background:#38bdf8;
+            border-radius:5px;
+            transform-origin:left center;
+            box-shadow:0 0 10px rgba(56,189,248,0.5);
         }}
 
-        .branch:nth-child(2) {{
-            transform: rotate(-{branch_angle}deg);
+        .branch1 {{
+            top:75px;
+            transform:rotate(-{branch_angle}deg);
         }}
 
-        .branch:nth-child(3) {{
-            transform: rotate({branch_angle}deg);
+        .branch2 {{
+            top:75px;
+            transform:rotate({branch_angle}deg);
         }}
 
-        .branch:nth-child(4) {{
-            top: 105px;
-            transform: rotate(-{branch_angle + 10}deg);
+        .branch3 {{
+            top:130px;
+            transform:rotate(-{branch_angle + 10}deg);
         }}
 
-        .branch:nth-child(5) {{
-            top: 105px;
-            transform: rotate({branch_angle + 10}deg);
+        .branch4 {{
+            top:130px;
+            transform:rotate({branch_angle + 10}deg);
         }}
 
-        .branch:nth-child(6) {{
-            top: 145px;
-            transform: rotate(-{branch_angle + 15}deg);
+        .branch5 {{
+            top:185px;
+            transform:rotate(-{branch_angle + 15}deg);
         }}
 
-        .branch:nth-child(7) {{
-            top: 145px;
-            transform: rotate({branch_angle + 15}deg);
+        .branch6 {{
+            top:185px;
+            transform:rotate({branch_angle + 15}deg);
+        }}
+
+        .particle {{
+            position:absolute;
+            top:-10px;
+            width:7px;
+            height:7px;
+            background:#f59e0b;
+            border-radius:50%;
+            animation:flowDown {animation_duration}s linear infinite;
+        }}
+
+        @keyframes flowDown {{
+
+            0% {{
+                top:-10px;
+                opacity:0;
+            }}
+
+            15% {{
+                opacity:1;
+            }}
+
+            85% {{
+                opacity:1;
+            }}
+
+            100% {{
+                top:340px;
+                opacity:0;
+            }}
+
+        }}
+
+        .outlet-particle {{
+            position:absolute;
+            bottom:15px;
+            width:6px;
+            height:6px;
+            background:#ef4444;
+            border-radius:50%;
+            animation:outletFlow {animation_duration}s linear infinite;
+        }}
+
+        @keyframes outletFlow {{
+
+            0% {{
+                bottom:15px;
+                opacity:0;
+            }}
+
+            50% {{
+                opacity:1;
+            }}
+
+            100% {{
+                bottom:0px;
+                opacity:0;
+            }}
+
         }}
 
         .bead {{
-            position: absolute;
-            width: {max(8, bead_size)}px;
-            height: {max(8, bead_size)}px;
-            background: #f59e0b;
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(245,158,11,0.7);
+            position:absolute;
+            width:{max(8, bead_size)}px;
+            height:{max(8, bead_size)}px;
+            background:#f59e0b;
+            border-radius:50%;
+            box-shadow:0 0 8px rgba(245,158,11,0.7);
         }}
 
-        .b1 {{ left: 35%; top: 55px; }}
-        .b2 {{ left: 65%; top: 70px; }}
-        .b3 {{ left: 30%; top: 105px; }}
-        .b4 {{ left: 70%; top: 120px; }}
-        .b5 {{ left: 42%; top: 150px; }}
-        .b6 {{ left: 58%; top: 165px; }}
+        .b1 {{
+            left:40%;
+            top:95px;
+        }}
 
-        .architecture-data {{
-            margin-top: 10px;
-            font-size: 13px;
-            color: #cbd5e1;
+        .b2 {{
+            left:58%;
+            top:105px;
+        }}
+
+        .b3 {{
+            left:38%;
+            top:150px;
+        }}
+
+        .b4 {{
+            left:60%;
+            top:165px;
+        }}
+
+        .b5 {{
+            left:42%;
+            top:205px;
+        }}
+
+        .b6 {{
+            left:58%;
+            top:220px;
+        }}
+
+        .sensor {{
+            position:absolute;
+            right:15px;
+            top:15px;
+            background:#020617;
+            border:1px solid #334155;
+            border-radius:8px;
+            padding:10px;
+            font-size:12px;
+            line-height:1.6;
+        }}
+
+        .status {{
+            margin-top:12px;
+            text-align:center;
+            color:#94a3b8;
+            font-size:13px;
         }}
 
         </style>
 
-        <div class="root-system">
+        <div class="reactor">
 
-            <div class="root-title">
-                Virtual Reactor Architecture
+            <div class="reactor-title">
+                LIVE DIGITAL TWIN — ROOT REACTOR
             </div>
 
-            <div class="root-network">
+            <div class="flow-zone">
+
+                <div class="water-flow"></div>
 
                 <div class="trunk"></div>
 
-                <div class="branch"></div>
-                <div class="branch"></div>
-                <div class="branch"></div>
-                <div class="branch"></div>
-                <div class="branch"></div>
-                <div class="branch"></div>
+                <div class="branch branch1"></div>
+                <div class="branch branch2"></div>
+                <div class="branch branch3"></div>
+                <div class="branch branch4"></div>
+                <div class="branch branch5"></div>
+                <div class="branch branch6"></div>
 
                 <div class="bead b1"></div>
                 <div class="bead b2"></div>
@@ -2901,17 +3095,39 @@ elif st.session_state.screen == "Scenario Simulator":
                 <div class="bead b5"></div>
                 <div class="bead b6"></div>
 
+                {inlet_particles}
+
+                {outlet_particle_html}
+
+                <div class="sensor">
+
+                    <b>VIRTUAL SENSORS</b><br>
+
+                    Flow:
+                    {scenario_flow} L/min<br>
+
+                    Temperature:
+                    {scenario_temperature} °C<br>
+
+                    Loading:
+                    {pollutant_load}%<br>
+
+                    Health:
+                    {system_health:.1f}%
+
+                </div>
+
             </div>
 
-            <div class="architecture-data">
+            <div class="status">
 
                 Branches: {branch_count}
                 &nbsp; | &nbsp;
-                Branch angle: {branch_angle}°
+                Angle: {branch_angle}°
                 &nbsp; | &nbsp;
                 Spacing: {branch_spacing}
                 &nbsp; | &nbsp;
-                Bead diameter: {bead_size} mm
+                Bead: {bead_size} mm
 
             </div>
 
@@ -2920,7 +3136,7 @@ elif st.session_state.screen == "Scenario Simulator":
 
         st.components.v1.html(
             root_html,
-            height=300
+            height=390
         )
         st.subheader("📡 Virtual Sensor State")
 
