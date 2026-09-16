@@ -2330,7 +2330,7 @@ elif st.session_state.screen == "Performance Analytics":
         # PERFORMANCE INTELLIGENCE
         # -----------------------------
 
-        st.subheader("🧠 Performance Intelligence")
+st.subheader("🧠 Performance Intelligence")
 
         future_health = performance_df.iloc[-1][
             "System Health"
