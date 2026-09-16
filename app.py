@@ -882,7 +882,7 @@ elif st.session_state.screen == "Optimized Prediction":
         "use for real industrial treatment decisions."
     )
 
-  # =================================================
+# =================================================
 # BEAD FORMULATION
 # =================================================
 
