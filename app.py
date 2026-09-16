@@ -2371,7 +2371,7 @@ st.info(
         # SYSTEM DIAGNOSTICS
         # -----------------------------
 
-        st.subheader("System Diagnostics")
+st.subheader("System Diagnostics")
 
         diagnostic_col1, diagnostic_col2 = st.columns(2)
 
