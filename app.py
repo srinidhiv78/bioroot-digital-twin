@@ -2361,7 +2361,7 @@ else:
                 f"{future_health:.1f}%."
             )
 
-        st.info(
+st.info(
             f"Digital-twin forecast indicates approximately "
             f"{future_phosphate:.1f}% phosphate removal at the "
             f"+1 hour horizon under the simulated operating conditions."
