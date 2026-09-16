@@ -3253,13 +3253,330 @@ elif st.session_state.screen == "Scenario Simulator":
 elif st.session_state.screen == "Regeneration & Lifecycle":
 
     st.header("♻️ Regeneration & Lifecycle")
-
-    st.info(
-        "This module will track bead utilization, regeneration cycles, "
-        "replacement requirements and plastic waste diversion."
+    st.caption(
+        "Circular lifecycle intelligence for treatment beads and recycled plastic"
     )
 
-    if st.button("← Back"):
+    facility_data = st.session_state.get(
+        "facility_data",
+        {}
+    )
 
-        st.session_state.screen = "Optimized Prediction"
-        st.rerun()
+    design_data = st.session_state.get(
+        "design_data",
+        {}
+    )
+
+    if not facility_data or not design_data:
+
+        st.warning(
+            "Complete the Industry Portal and Optimized Prediction "
+            "modules before viewing lifecycle analytics."
+        )
+
+    else:
+
+        # -----------------------------
+        # LIFECYCLE PARAMETERS
+        # -----------------------------
+
+        bead_loading = design_data.get(
+            "bead_loading",
+            10
+        )
+
+        recycled_plastic = design_data.get(
+            "recycled_plastic",
+            15
+        )
+
+        system_flow = facility_data.get(
+            "flow_l_min",
+            50
+        )
+
+        # Prototype lifecycle model
+        estimated_cycles = 6
+
+        current_cycle = 1
+
+        utilization = (
+            current_cycle
+            / estimated_cycles
+            * 100
+        )
+
+        remaining_life = max(
+            0,
+            100 - utilization
+        )
+
+        regeneration_threshold = 75
+
+        # -----------------------------
+        # LIFECYCLE STATUS
+        # -----------------------------
+
+        st.subheader("🔄 Bead Lifecycle Status")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric(
+            "Current Cycle",
+            f"{current_cycle} / {estimated_cycles}"
+        )
+
+        col2.metric(
+            "Bead Utilization",
+            f"{utilization:.1f}%"
+        )
+
+        col3.metric(
+            "Remaining Lifecycle",
+            f"{remaining_life:.1f}%"
+        )
+
+        col4.metric(
+            "Regeneration Threshold",
+            f"{regeneration_threshold}%"
+        )
+
+        st.divider()
+
+        # -----------------------------
+        # LIFECYCLE TRAJECTORY
+        # -----------------------------
+
+        st.subheader("📈 Predicted Lifecycle Trajectory")
+
+        lifecycle_data = []
+
+        for cycle in range(
+            1,
+            estimated_cycles + 1
+        ):
+
+            lifecycle_health = max(
+                55,
+                100 - (
+                    cycle - 1
+                ) * 8
+            )
+
+            lifecycle_phosphate = max(
+                50,
+                design_data.get(
+                    "phosphate_removal",
+                    82
+                )
+                - (
+                    cycle - 1
+                ) * 5
+            )
+
+            lifecycle_dye = max(
+                45,
+                design_data.get(
+                    "dye_removal",
+                    75
+                )
+                - (
+                    cycle - 1
+                ) * 5
+            )
+
+            lifecycle_data.append(
+                {
+                    "Cycle": cycle,
+                    "System Health": lifecycle_health,
+                    "Phosphate Removal": lifecycle_phosphate,
+                    "Dye Removal": lifecycle_dye
+                }
+            )
+
+        lifecycle_df = pd.DataFrame(
+            lifecycle_data
+        )
+
+        chart_df = lifecycle_df.set_index(
+            "Cycle"
+        )
+
+        st.line_chart(
+            chart_df,
+            height=350
+        )
+
+        st.caption(
+            "Prototype lifecycle forecast. "
+            "Actual regeneration intervals require experimental validation."
+        )
+
+        # -----------------------------
+        # MATERIAL CIRCULARITY
+        # -----------------------------
+
+        st.subheader("♻️ Material Circularity")
+
+        material_col1, material_col2 = st.columns(2)
+
+        with material_col1:
+
+            st.markdown("### Recycled Material Integration")
+
+            st.write(
+                f"**Recycled plastic fraction:** "
+                f"{recycled_plastic:.1f}%"
+            )
+
+            st.write(
+                f"**Bead loading:** "
+                f"{bead_loading:.1f}"
+            )
+
+            st.write(
+                "**Primary role:** Structural reinforcement"
+            )
+
+            st.write(
+                "**Waste stream:** Decontaminated laboratory plastic"
+            )
+
+        with material_col2:
+
+            st.markdown("### Circular Treatment Loop")
+
+            st.write(
+                "Laboratory plastic"
+            )
+
+            st.write(
+                "↓"
+            )
+
+            st.write(
+                "Decontamination"
+            )
+
+            st.write(
+                "↓"
+            )
+
+            st.write(
+                "Bead fabrication"
+            )
+
+            st.write(
+                "↓"
+            )
+
+            st.write(
+                "Wastewater treatment"
+            )
+
+            st.write(
+                "↓"
+            )
+
+            st.write(
+                "Regeneration / replacement"
+            )
+
+        st.divider()
+
+        # -----------------------------
+        # REGENERATION INTELLIGENCE
+        # -----------------------------
+
+        st.subheader("🧠 Regeneration Intelligence")
+
+        if utilization < regeneration_threshold:
+
+            st.success(
+                "Bead system remains within the simulated "
+                "operational lifecycle window. "
+                "No immediate regeneration intervention is indicated."
+            )
+
+        else:
+
+            st.warning(
+                "Lifecycle threshold approaching. "
+                "Regeneration or bead replacement should be evaluated."
+            )
+
+        # -----------------------------
+        # WASTE DIVERSION INDICATOR
+        # -----------------------------
+
+        plastic_mass = (
+            bead_loading
+            * recycled_plastic
+            / 100
+        )
+
+        st.subheader("🌍 Circularity Impact")
+
+        impact_col1, impact_col2, impact_col3 = st.columns(3)
+
+        impact_col1.metric(
+            "Recycled Plastic Contribution",
+            f"{plastic_mass:.1f} units"
+        )
+
+        impact_col2.metric(
+            "Potential Reuse Cycles",
+            f"{estimated_cycles}"
+        )
+
+        impact_col3.metric(
+            "Treatment Architecture",
+            "Reusable"
+        )
+
+        st.info(
+            "BIOROOT is designed as a circular treatment concept in which "
+            "decontaminated laboratory plastic is incorporated into "
+            "reusable treatment beads rather than being treated solely "
+            "as a disposal stream."
+        )
+
+        st.caption(
+            "Lifecycle values shown here are prototype model outputs and "
+            "should be replaced with experimentally measured regeneration "
+            "and reuse data during future validation."
+        )
+
+        st.divider()
+
+        # -----------------------------
+        # NAVIGATION
+        # -----------------------------
+
+        col_back, col_home = st.columns(2)
+
+        with col_back:
+
+            if st.button(
+                "← Back to Scenario Simulator",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Scenario Simulator"
+                )
+
+                st.rerun()
+
+        with col_home:
+
+            if st.button(
+                "← Back to Industry Portal",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Industry Portal"
+                )
+
+                st.rerun()
