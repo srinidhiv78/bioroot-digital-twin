@@ -2113,6 +2113,10 @@ elif st.session_state.screen == "Digital Twin Control Room":
 # PERFORMANCE ANALYTICS
 # =================================================
 
+# =================================================
+# PERFORMANCE ANALYTICS
+# =================================================
+
 elif st.session_state.screen == "Performance Analytics":
 
     st.header("📊 Performance Analytics")
@@ -2323,37 +2327,41 @@ elif st.session_state.screen == "Performance Analytics":
             "System Health (%)"
         ]
 
-    st.table(
+        st.table(
             forecast_display.round(1)
         )
+
         # -----------------------------
         # PERFORMANCE INTELLIGENCE
         # -----------------------------
 
-st.subheader("🧠 Performance Intelligence")
+        st.subheader("🧠 Performance Intelligence")
 
-future_health = performance_df.iloc[-1][
-  "System Health"
-        ]
-future_phosphate = performance_df.iloc[-1][
-  "Phosphate Removal"
+        future_health = performance_df.iloc[-1][
+            "System Health"
         ]
 
-if future_health > 85:
+        future_phosphate = performance_df.iloc[-1][
+            "Phosphate Removal"
+        ]
+
+        if future_health > 85:
 
             st.success(
                 f"System trajectory remains stable. "
                 f"Projected system health after 1 hour: "
                 f"{future_health:.1f}%."
             )
-elif future_health > 70:
+
+        elif future_health > 70:
 
             st.warning(
                 f"Moderate performance degradation detected. "
                 f"Projected system health after 1 hour: "
                 f"{future_health:.1f}%."
             )
-else:
+
+        else:
 
             st.error(
                 f"Potential intervention window detected. "
@@ -2361,7 +2369,7 @@ else:
                 f"{future_health:.1f}%."
             )
 
-st.info(
+        st.info(
             f"Digital-twin forecast indicates approximately "
             f"{future_phosphate:.1f}% phosphate removal at the "
             f"+1 hour horizon under the simulated operating conditions."
@@ -2371,7 +2379,7 @@ st.info(
         # SYSTEM DIAGNOSTICS
         # -----------------------------
 
-st.subheader("System Diagnostics")
+        st.subheader("System Diagnostics")
 
         diagnostic_col1, diagnostic_col2 = st.columns(2)
 
