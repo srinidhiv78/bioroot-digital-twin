@@ -2887,13 +2887,13 @@ elif st.session_state.screen == "Scenario Simulator":
 
         .water-flow {{
             position:absolute;
-            left:47%;
-            top:-20px;
-            width:70px;
-            height:370px;
+            left:0;
+            top:42%;
+            width:100%;
+            height:70px;
             background:rgba(56,189,248,0.12);
-            border-left:2px solid rgba(56,189,248,0.35);
-            border-right:2px solid rgba(56,189,248,0.35);
+            border-top:2px solid rgba(56,189,248,0.35);
+            border-bottom:2px solid rgba(56,189,248,0.35);
         }}
 
         .trunk {{
@@ -2951,18 +2951,19 @@ elif st.session_state.screen == "Scenario Simulator":
 
         .particle {{
             position:absolute;
-            top:-10px;
+            left:-10px;
+            top:45%;
             width:7px;
             height:7px;
             background:#f59e0b;
             border-radius:50%;
-            animation:flowDown {animation_duration}s linear infinite;
+            animation:flowRight {animation_duration}s linear infinite;
         }}
 
-        @keyframes flowDown {{
+         @keyframes flowRight {{
 
             0% {{
-                top:-10px;
+                left:-10px;
                 opacity:0;
             }}
 
@@ -2975,7 +2976,7 @@ elif st.session_state.screen == "Scenario Simulator":
             }}
 
             100% {{
-                top:340px;
+                left:100%;
                 opacity:0;
             }}
 
