@@ -2113,7 +2113,7 @@ elif st.session_state.screen == "Digital Twin Control Room":
 # PERFORMANCE ANALYTICS
 # =================================================
 
- elif st.session_state.screen == "Performance Analytics":
+elif st.session_state.screen == "Performance Analytics":
 
     st.header("📊 Performance Analytics")
     st.caption(
