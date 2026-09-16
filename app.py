@@ -2345,7 +2345,7 @@ elif st.session_state.screen == "Performance Analytics":
             "Phosphate Removal"
         ]
 
-        if future_health > 85:
+             if future_health > 85:
 
             st.success(
                 f"System trajectory remains stable. "
@@ -2353,19 +2353,21 @@ elif st.session_state.screen == "Performance Analytics":
                 f"{future_health:.1f}%."
             )
 
-         elif future_health > 70:
+        elif future_health > 70:
 
-    st.info(
-        f"Stable treatment trajectory with gradual lifecycle-related "
-        f"performance decline. Projected system health after 1 hour: "
-        f"{future_health:.1f}%."
-    )
+            st.info(
+                f"Stable treatment trajectory with gradual lifecycle-related "
+                f"performance decline. Projected system health after 1 hour: "
+                f"{future_health:.1f}%."
+            )
 
         else:
 
             st.error(
                 f"Potential intervention window detected. "
                 f"Projected system health: "
+                f"{future_health:.1f}%."
+            )
                 f"{future_health:.1f}%."
             )
 
