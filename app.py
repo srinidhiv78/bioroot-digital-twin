@@ -91,21 +91,21 @@ screens = [
 
 for screen_name in screens:
 
-    if screen_name in ["Industry Portal", "Optimized Prediction"]:
+    if screen_name in [
+        "Industry Portal",
+        "Optimized Prediction",
+        "Digital Twin Control Room",
+        "Performance Analytics",
+        "Scenario Simulator",
+        "Regeneration & Lifecycle"
+    ]:
 
         if st.sidebar.button(
             screen_name,
             use_container_width=True
         ):
             st.session_state.screen = screen_name
-
-    else:
-
-        st.sidebar.button(
-            "🔒 " + screen_name,
-            use_container_width=True,
-            disabled=True
-        )
+            st.rerun()
 
 # =================================================
 # HEADER
@@ -305,7 +305,7 @@ elif st.session_state.screen == "Optimized Prediction":
     if not st.session_state.initialized:
 
         st.warning(
-            "Please configure the industry parameters first."
+            "Please configure the Industry Portal first."
         )
 
         if st.button("← Return to Industry Portal"):
@@ -340,17 +340,11 @@ elif st.session_state.screen == "Optimized Prediction":
         # =================================================
 
         diameter_m = diameter_mm / 1000
-
         pipe_area = math.pi * (diameter_m / 2) ** 2
-
         flow_m3_s = flow_l_min / 1000 / 60
-
         velocity = flow_m3_s / pipe_area
-
         pipe_volume_m3 = pipe_area * length_m
-
         pipe_volume_l = pipe_volume_m3 * 1000
-
         residence_time = pipe_volume_l / flow_l_min
 
         # =================================================
@@ -1148,35 +1142,562 @@ elif st.session_state.screen == "Optimized Prediction":
 
 elif st.session_state.screen == "Digital Twin Control Room":
 
-    st.header("🖥️ Digital Twin Control Room")
+    if not st.session_state.initialized:
 
-    st.info(
-        "Digital Twin Control Room is the next development module. "
-        "It will display the virtual wastewater treatment system, "
-        "live hydraulic variables and simulated treatment response."
-    )
+        st.warning(
+            "Please configure the Industry Portal first."
+        )
 
-    st.markdown("---")
+        if st.button("← Return to Industry Portal"):
+            st.session_state.screen = "Industry Portal"
+            st.rerun()
 
-    col1, col2, col3, col4 = st.columns(4)
+    else:
 
-    with col1:
-        st.metric("System status", "ONLINE")
+        data = st.session_state.facility_data
+        design = st.session_state.design_data
 
-    with col2:
-        st.metric("Twin synchronization", "ACTIVE")
+        facility_id = data["facility_id"]
+        flow_l_min = data["flow_l_min"]
+        temperature = data["temperature"]
+        pressure = data["pressure"]
+        phosphate_input = data["phosphate_input"]
+        dye_input = data["dye_input"]
 
-    with col3:
-        st.metric("Virtual sensors", "12")
+        phosphate_removal = design["phosphate_removal"]
+        dye_removal = design["dye_removal"]
+        residence_time = design["residence_time"]
+        bead_loading = design["bead_loading"]
+        branch_count = design["branch_count"]
 
-    with col4:
-        st.metric("Model state", "CALIBRATION")
+        # =================================================
+        # DIGITAL TWIN SIMULATION STATE
+        # =================================================
 
-    st.markdown("---")
+        simulation_time = 18
 
-    if st.button("← Back to Optimized Prediction"):
-        st.session_state.screen = "Optimized Prediction"
-        st.rerun()
+        dynamic_flow = (
+            flow_l_min
+            + 3 * math.sin(simulation_time / 4)
+        )
+
+        dynamic_temperature = (
+            temperature
+            + 0.4 * math.sin(simulation_time / 6)
+        )
+
+        dynamic_pressure = (
+            pressure
+            + 0.03 * math.sin(simulation_time / 5)
+        )
+
+        dynamic_residence = (
+            residence_time
+            * (flow_l_min / dynamic_flow)
+        )
+
+        dynamic_phosphate_removal = max(
+            20,
+            min(
+                95,
+                phosphate_removal
+                - max(
+                    0,
+                    (dynamic_flow - flow_l_min) * 0.12
+                )
+            )
+        )
+
+        dynamic_dye_removal = max(
+            20,
+            min(
+                95,
+                dye_removal
+                - max(
+                    0,
+                    (dynamic_flow - flow_l_min) * 0.12
+                )
+            )
+        )
+
+        if phosphate_input > 0:
+            inlet_phosphate = phosphate_input
+        else:
+            inlet_phosphate = 100.0
+
+        if dye_input > 0:
+            inlet_dye = dye_input
+        else:
+            inlet_dye = 100.0
+
+        outlet_phosphate = (
+            inlet_phosphate
+            * (1 - dynamic_phosphate_removal / 100)
+        )
+
+        outlet_dye = (
+            inlet_dye
+            * (1 - dynamic_dye_removal / 100)
+        )
+
+        system_health = max(
+            70,
+            min(
+                99,
+                96
+                - max(
+                    0,
+                    (dynamic_flow - 70) * 0.15
+                )
+                - max(
+                    0,
+                    (bead_loading - 18) * 0.4
+                )
+            )
+        )
+
+        # =================================================
+        # HEADER
+        # =================================================
+
+        st.header("🖥️ Digital Twin Control Room")
+
+        st.caption(
+            f"Virtual operating environment • Facility {facility_id} • "
+            "Prototype real-time digital twin"
+        )
+
+        # =================================================
+        # SYSTEM STATUS
+        # =================================================
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric(
+                "System status",
+                "● ONLINE"
+            )
+
+        with col2:
+            st.metric(
+                "Twin synchronization",
+                "ACTIVE"
+            )
+
+        with col3:
+            st.metric(
+                "Simulation time",
+                f"{simulation_time} min"
+            )
+
+        with col4:
+            st.metric(
+                "System health",
+                f"{system_health:.1f}%"
+            )
+
+        # =================================================
+        # VIRTUAL TREATMENT PROCESS
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("🌊 Virtual Treatment Process")
+
+        st.caption(
+            "Live virtual representation of wastewater movement "
+            "through the biofunctional root-treatment network."
+        )
+
+        process_col1, process_col2, process_col3 = st.columns(
+            [1, 3, 1]
+        )
+
+        with process_col1:
+
+            st.markdown("### INLET")
+
+            st.metric(
+                "Flow",
+                f"{dynamic_flow:.1f} L/min"
+            )
+
+            st.metric(
+                "Pressure",
+                f"{dynamic_pressure:.2f} bar"
+            )
+
+        with process_col2:
+
+            st.markdown(
+                """
+                <div style="
+                    border:2px solid #4CAF50;
+                    border-radius:18px;
+                    padding:25px;
+                    background:#f8fff8;
+                    text-align:center;
+                ">
+
+                <h3>🌿 BIOROOT REACTOR</h3>
+
+                <p>────────●──────●──────●────────</p>
+
+                <p>↘ &nbsp;&nbsp; ↘ &nbsp;&nbsp; ↘ &nbsp;&nbsp; ↘</p>
+
+                <p>● &nbsp;&nbsp; ● &nbsp;&nbsp; ● &nbsp;&nbsp; ●</p>
+
+                <p>↗ &nbsp;&nbsp; ↗ &nbsp;&nbsp; ↗ &nbsp;&nbsp; ↗</p>
+
+                <p>────────●──────●──────●────────</p>
+
+                <strong>
+                Biofunctional composite bead network
+                </strong>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.progress(
+                min(
+                    1.0,
+                    max(
+                        0.0,
+                        dynamic_residence / 10
+                    )
+                )
+            )
+
+            st.caption(
+                f"Virtual residence time: "
+                f"{dynamic_residence:.2f} min"
+            )
+
+        with process_col3:
+
+            st.markdown("### OUTLET")
+
+            st.metric(
+                "Phosphate",
+                f"{outlet_phosphate:.1f} mg/L"
+            )
+
+            st.metric(
+                "Dye",
+                f"{outlet_dye:.1f} mg/L"
+            )
+
+        # =================================================
+        # VIRTUAL SENSOR ARRAY
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("📡 Virtual Sensor Array")
+
+        sensor1, sensor2, sensor3, sensor4, sensor5, sensor6 = st.columns(6)
+
+        with sensor1:
+            st.metric(
+                "FLOW",
+                f"{dynamic_flow:.1f}"
+            )
+            st.caption("L/min")
+
+        with sensor2:
+            st.metric(
+                "TEMP",
+                f"{dynamic_temperature:.1f}"
+            )
+            st.caption("°C")
+
+        with sensor3:
+            st.metric(
+                "PRESSURE",
+                f"{dynamic_pressure:.2f}"
+            )
+            st.caption("bar")
+
+        with sensor4:
+            st.metric(
+                "RESIDENCE",
+                f"{dynamic_residence:.2f}"
+            )
+            st.caption("min")
+
+        with sensor5:
+            st.metric(
+                "PO₄ REMOVAL",
+                f"{dynamic_phosphate_removal:.1f}%"
+            )
+            st.caption("virtual")
+
+        with sensor6:
+            st.metric(
+                "DYE REMOVAL",
+                f"{dynamic_dye_removal:.1f}%"
+            )
+            st.caption("virtual")
+
+        # =================================================
+        # TREATMENT ZONE MONITORING
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("🧬 Treatment Zone Monitoring")
+
+        zone_data = pd.DataFrame(
+            {
+                "Treatment zone": [
+                    "Inlet zone",
+                    "Root zone 1",
+                    "Root zone 2",
+                    "Root zone 3",
+                    "Outlet zone"
+                ],
+
+                "Virtual flow (L/min)": [
+                    dynamic_flow,
+                    dynamic_flow * 0.98,
+                    dynamic_flow * 0.96,
+                    dynamic_flow * 0.94,
+                    dynamic_flow * 0.93
+                ],
+
+                "Relative treatment state (%)": [
+                    0,
+                    dynamic_phosphate_removal * 0.30,
+                    dynamic_phosphate_removal * 0.55,
+                    dynamic_phosphate_removal * 0.78,
+                    dynamic_phosphate_removal
+                ],
+
+                "Bead interaction": [
+                    "Initial contact",
+                    "Adsorption / interaction",
+                    "Extended contact",
+                    "Final treatment",
+                    "Treated effluent"
+                ]
+            }
+        )
+
+        st.dataframe(
+            zone_data,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # =================================================
+        # LIVE RESPONSE PROFILE
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("📈 Live Twin Response Profile")
+
+        time_points = [
+            0,
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16,
+            18
+        ]
+
+        flow_profile = []
+        phosphate_profile = []
+        dye_profile = []
+
+        for t in time_points:
+
+            simulated_flow = (
+                flow_l_min
+                + 3 * math.sin(t / 4)
+            )
+
+            simulated_phosphate = max(
+                20,
+                min(
+                    95,
+                    phosphate_removal
+                    - max(
+                        0,
+                        (simulated_flow - flow_l_min)
+                        * 0.12
+                    )
+                )
+            )
+
+            simulated_dye = max(
+                20,
+                min(
+                    95,
+                    dye_removal
+                    - max(
+                        0,
+                        (simulated_flow - flow_l_min)
+                        * 0.12
+                    )
+                )
+            )
+
+            flow_profile.append(
+                simulated_flow
+            )
+
+            phosphate_profile.append(
+                simulated_phosphate
+            )
+
+            dye_profile.append(
+                simulated_dye
+            )
+
+        live_data = pd.DataFrame(
+            {
+                "Simulation time (min)": time_points,
+                "Flow rate (L/min)": flow_profile,
+                "Phosphate removal (%)": phosphate_profile,
+                "Dye removal (%)": dye_profile
+            }
+        )
+
+        st.line_chart(
+            live_data,
+            x="Simulation time (min)",
+            y=[
+                "Flow rate (L/min)",
+                "Phosphate removal (%)",
+                "Dye removal (%)"
+            ]
+        )
+
+        # =================================================
+        # DIGITAL TWIN INTELLIGENCE
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("🧠 Digital Twin Intelligence")
+
+        if dynamic_flow > flow_l_min + 2:
+
+            st.warning(
+                "Hydraulic loading is increasing. The virtual twin "
+                "predicts reduced residence time and recommends "
+                "monitoring treatment efficiency."
+            )
+
+        else:
+
+            st.success(
+                "Hydraulic conditions remain within the configured "
+                "operating envelope. Treatment performance is "
+                "predicted to remain stable."
+            )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.metric(
+                "Predicted current phosphate removal",
+                f"{dynamic_phosphate_removal:.1f}%"
+            )
+
+        with col2:
+
+            st.metric(
+                "Predicted current dye removal",
+                f"{dynamic_dye_removal:.1f}%"
+            )
+
+        # =================================================
+        # TWIN MODEL STATE
+        # =================================================
+
+        st.markdown("---")
+
+        st.subheader("⚙️ Twin Model State")
+
+        model_state = pd.DataFrame(
+            {
+                "Parameter": [
+                    "Hydraulic model",
+                    "Treatment response model",
+                    "Composite state",
+                    "Root architecture",
+                    "Virtual sensor network",
+                    "Calibration status"
+                ],
+
+                "Current state": [
+                    "ACTIVE",
+                    "ACTIVE",
+                    "ACTIVE",
+                    f"{branch_count} branches",
+                    "SYNCHRONIZED",
+                    "Prototype / requires experimental data"
+                ]
+            }
+        )
+
+        st.dataframe(
+            model_state,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        st.caption(
+            "⚠️ This Digital Twin Control Room is a prototype virtual "
+            "simulation. Displayed sensor values and treatment responses "
+            "are model-generated and require experimental calibration "
+            "before representing real plant measurements."
+        )
+
+        # =================================================
+        # NAVIGATION
+        # =================================================
+
+        st.markdown("---")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button(
+                "← Back to Optimized Prediction",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Optimized Prediction"
+                )
+
+                st.rerun()
+
+        with col2:
+
+            if st.button(
+                "Open Performance Analytics →",
+                type="primary",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Performance Analytics"
+                )
+
+                st.rerun()
 
 # =================================================
 # PERFORMANCE ANALYTICS
