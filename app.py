@@ -15,8 +15,10 @@ if "screen" not in st.session_state:
 
 if "initialized" not in st.session_state:
     st.session_state.initialized = False
+
 if "facility_data" not in st.session_state:
     st.session_state.facility_data = {}
+
 
 # =========================================================
 # CUSTOM STYLING
@@ -114,11 +116,17 @@ with st.sidebar:
 
     st.markdown("---")
 
+    twin_status = (
+        "● CONFIGURED"
+        if st.session_state.initialized
+        else "● STANDBY"
+    )
+
     st.markdown(
-        '<div class="status-card">'
-        '<div class="small-label">DIGITAL TWIN STATUS</div>'
-        '<b>● STANDBY</b>'
-        '</div>',
+        f'<div class="status-card">'
+        f'<div class="small-label">DIGITAL TWIN STATUS</div>'
+        f'<b>{twin_status}</b>'
+        f'</div>',
         unsafe_allow_html=True
     )
 
@@ -145,16 +153,15 @@ if st.session_state.screen == "Industry Portal":
     </div>
     """, unsafe_allow_html=True)
 
-
     st.info(
         "Prototype platform: digital-twin predictions are demonstration "
         "outputs and require calibration against experimental treatment data."
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # FACILITY PROFILE
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown(
         '<div class="section-card">'
@@ -168,12 +175,14 @@ if st.session_state.screen == "Industry Portal":
     col1, col2, col3 = st.columns(3)
 
     with col1:
+
         facility_id = st.text_input(
             "Facility / Plant ID",
             value="PLANT-001"
         )
 
     with col2:
+
         application = st.selectbox(
             "Industrial Sector",
             [
@@ -186,6 +195,7 @@ if st.session_state.screen == "Industry Portal":
         )
 
     with col3:
+
         operating_hours = st.number_input(
             "Daily operating hours",
             min_value=1.0,
@@ -195,9 +205,9 @@ if st.session_state.screen == "Industry Portal":
         )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # HYDRAULIC CONFIGURATION
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown(
         '<div class="section-card">'
@@ -211,8 +221,9 @@ if st.session_state.screen == "Industry Portal":
     col1, col2, col3 = st.columns(3)
 
     with col1:
+
         pipe_diameter = st.number_input(
-            "Existing pipe diameter",
+            "Existing pipe diameter (mm)",
             min_value=20.0,
             max_value=2000.0,
             value=150.0,
@@ -220,7 +231,7 @@ if st.session_state.screen == "Industry Portal":
         )
 
         pipe_length = st.number_input(
-            "Available pipe length",
+            "Available pipe length (m)",
             min_value=1.0,
             max_value=500.0,
             value=20.0,
@@ -228,8 +239,9 @@ if st.session_state.screen == "Industry Portal":
         )
 
     with col2:
+
         flow_rate = st.number_input(
-            "Wastewater flow rate",
+            "Wastewater flow rate (L/min)",
             min_value=1.0,
             max_value=10000.0,
             value=50.0,
@@ -245,6 +257,7 @@ if st.session_state.screen == "Industry Portal":
         )
 
     with col3:
+
         operating_pressure = st.number_input(
             "Operating pressure (bar)",
             min_value=0.1,
@@ -264,9 +277,9 @@ if st.session_state.screen == "Industry Portal":
         )
 
 
-    # -----------------------------------------------------
-    # OPTIONAL WATER QUALITY INFORMATION
-    # -----------------------------------------------------
+    # =====================================================
+    # WASTEWATER CHARACTERIZATION
+    # =====================================================
 
     st.markdown(
         '<div class="section-card">'
@@ -286,6 +299,7 @@ if st.session_state.screen == "Industry Portal":
         col1, col2, col3 = st.columns(3)
 
         with col1:
+
             phosphate = st.number_input(
                 "Phosphate concentration (mg/L)",
                 min_value=0.0,
@@ -295,6 +309,7 @@ if st.session_state.screen == "Industry Portal":
             )
 
         with col2:
+
             dye_concentration = st.number_input(
                 "Dye / colour index (mg/L)",
                 min_value=0.0,
@@ -304,6 +319,7 @@ if st.session_state.screen == "Industry Portal":
             )
 
         with col3:
+
             organic_load = st.number_input(
                 "Organic load indicator (mg/L)",
                 min_value=0.0,
@@ -325,12 +341,11 @@ if st.session_state.screen == "Industry Portal":
         )
 
 
+    # =====================================================
+    # SYSTEM INITIALIZATION
+    # =====================================================
+
     st.markdown("---")
-
-
-    # -----------------------------------------------------
-    # INITIALIZE
-    # -----------------------------------------------------
 
     st.markdown("### 🚀 System Initialization")
 
@@ -339,48 +354,86 @@ if st.session_state.screen == "Industry Portal":
         "BIOROOT optimization and digital-twin environment."
     )
 
-if st.button(
-    "🚀 INITIALIZE BIOROOT DIGITAL TWIN",
-    use_container_width=True
-):
+    if st.button(
+        "🚀 INITIALIZE BIOROOT DIGITAL TWIN",
+        use_container_width=True
+    ):
 
-    st.session_state.facility_data = {
-        "facility_id": facility_id,
-        "application": application,
-        "operating_hours": operating_hours,
-        "pipe_diameter": pipe_diameter,
-        "pipe_length": pipe_length,
-        "flow_rate": flow_rate,
-        "temperature": temperature,
-        "operating_pressure": operating_pressure,
-        "treatment_priority": treatment_priority,
-        "phosphate": phosphate,
-        "dye_concentration": dye_concentration,
-        "organic_load": organic_load
-    }
+        st.session_state.facility_data = {
+            "facility_id": facility_id,
+            "application": application,
+            "operating_hours": operating_hours,
+            "pipe_diameter": pipe_diameter,
+            "pipe_length": pipe_length,
+            "flow_rate": flow_rate,
+            "temperature": temperature,
+            "operating_pressure": operating_pressure,
+            "treatment_priority": treatment_priority,
+            "phosphate": phosphate,
+            "dye_concentration": dye_concentration,
+            "organic_load": organic_load
+        }
 
-    st.session_state.initialized = True
-
-    st.success(
-        f"Facility {facility_id} successfully configured. "
-        "Digital-twin environment initialized."
-    )
-
-    st.session_state.screen = "Optimized Prediction"
-
-    st.rerun()
-        st.success(
-            f"Facility {facility_id} successfully configured. "
-            "Digital-twin environment initialized."
-        )
-
+        st.session_state.initialized = True
         st.session_state.screen = "Optimized Prediction"
 
         st.rerun()
 
 
 # =========================================================
-# PLACEHOLDER SCREENS
+# OPTIMIZED PREDICTION PLACEHOLDER
+# =========================================================
+
+elif st.session_state.screen == "Optimized Prediction":
+
+    st.title("🌱 Optimized Prediction")
+
+    st.info(
+        "The optimization engine will be built in the next development step."
+    )
+
+    if st.session_state.facility_data:
+
+        st.markdown("### 📋 Received Industry Parameters")
+
+        data = st.session_state.facility_data
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric(
+            "Pipe diameter",
+            f"{data['pipe_diameter']:.0f} mm"
+        )
+
+        c2.metric(
+            "Flow rate",
+            f"{data['flow_rate']:.0f} L/min"
+        )
+
+        c3.metric(
+            "Temperature",
+            f"{data['temperature']:.1f} °C"
+        )
+
+        c4.metric(
+            "Pipe length",
+            f"{data['pipe_length']:.0f} m"
+        )
+
+        st.success(
+            f"Facility {data['facility_id']} successfully transferred "
+            "to the optimization environment."
+        )
+
+    if st.button("← Back to Industry Portal"):
+
+        st.session_state.screen = "Industry Portal"
+
+        st.rerun()
+
+
+# =========================================================
+# OTHER PLACEHOLDER SCREENS
 # =========================================================
 
 else:
@@ -392,5 +445,7 @@ else:
     )
 
     if st.button("← Back to Industry Portal"):
+
         st.session_state.screen = "Industry Portal"
+
         st.rerun()
