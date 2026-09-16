@@ -2339,23 +2339,21 @@ future_phosphate = performance_df.iloc[-1][
   "Phosphate Removal"
         ]
 
-        if future_health > 85:
+if future_health > 85:
 
             st.success(
                 f"System trajectory remains stable. "
                 f"Projected system health after 1 hour: "
                 f"{future_health:.1f}%."
             )
-
-        elif future_health > 70:
+elif future_health > 70:
 
             st.warning(
                 f"Moderate performance degradation detected. "
                 f"Projected system health after 1 hour: "
                 f"{future_health:.1f}%."
             )
-
-        else:
+else:
 
             st.error(
                 f"Potential intervention window detected. "
