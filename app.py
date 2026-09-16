@@ -960,7 +960,7 @@ st.dataframe(
     # ARCHITECTURE
     # =================================================
 
-    st.markdown("---")
+st.markdown("---")
 
     st.subheader("🌿 Optimized Root Architecture")
 
