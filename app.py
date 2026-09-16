@@ -2140,18 +2140,17 @@ elif st.session_state.screen == "Performance Analytics":
         # BASE SYSTEM PARAMETERS
         # -----------------------------
 
-        base_flow = facility_data.get("flow_rate", 55)
+base_flow = facility_data.get("flow_l_min", 55)
 
-        base_phosphate = design_data.get(
-            "predicted_phosphate_removal",
-            82
-        )
+base_phosphate = design_data.get(
+    "phosphate_removal",
+    82
+)
 
-        base_dye = design_data.get(
-            "predicted_dye_removal",
-            75
-        )
-
+base_dye = design_data.get(
+    "dye_removal",
+    75
+)
         base_health = 96
 
         # -----------------------------
