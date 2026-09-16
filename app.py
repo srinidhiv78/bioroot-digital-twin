@@ -2791,10 +2791,10 @@ elif st.session_state.screen == "Scenario Simulator":
         # Pollutant loading controls particle density
         particle_count = int(
             min(
-                18,
+                30,
                 max(
                     5,
-                    pollutant_load / 8
+                    pollutant_load / 4
                 )
             )
         )
