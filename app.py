@@ -2353,13 +2353,13 @@ elif st.session_state.screen == "Performance Analytics":
                 f"{future_health:.1f}%."
             )
 
-        elif future_health > 70:
+         elif future_health > 70:
 
-            st.warning(
-                f"Moderate performance degradation detected. "
-                f"Projected system health after 1 hour: "
-                f"{future_health:.1f}%."
-            )
+    st.info(
+        f"Stable treatment trajectory with gradual lifecycle-related "
+        f"performance decline. Projected system health after 1 hour: "
+        f"{future_health:.1f}%."
+    )
 
         else:
 
