@@ -882,43 +882,79 @@ elif st.session_state.screen == "Optimized Prediction":
         "use for real industrial treatment decisions."
     )
 
-    # =================================================
-    # BEAD FORMULATION
-    # =================================================
+  # =================================================
+# BEAD FORMULATION
+# =================================================
 
-    st.markdown("---")
+st.markdown("---")
 
-    st.subheader("🧪 Optimized Bead Formulation")
+st.subheader("🧪 Optimized Bead Formulation")
 
-    col1, col2, col3, col4 = st.columns(4)
+st.caption(
+    "AI-optimized composite matrix based on facility hydraulics, "
+    "treatment priority and structural requirements."
+)
 
-    with col1:
+col1, col2, col3, col4 = st.columns(4)
 
-        st.metric(
+with col1:
+    st.metric(
+        "Sodium alginate",
+        f"{alginate:.1f}%"
+    )
+    st.caption("Polymer matrix")
+
+with col2:
+    st.metric(
+        "Sargassum tenerrimum",
+        f"{sargassum:.1f}%"
+    )
+    st.caption("Natural biosorbent")
+
+with col3:
+    st.metric(
+        "Eggshell powder",
+        f"{eggshell:.1f}%"
+    )
+    st.caption("Functional filler")
+
+with col4:
+    st.metric(
+        "Recycled polypropylene",
+        f"{recycled_plastic:.1f}%"
+    )
+    st.caption("Structural reinforcement")
+
+st.markdown("#### Composite Matrix")
+
+formulation_data = pd.DataFrame(
+    {
+        "Component": [
             "Sodium alginate",
-            f"{alginate:.1f}%"
-        )
-
-    with col2:
-
-        st.metric(
-            "Sargassum",
-            f"{sargassum:.1f}%"
-        )
-
-    with col3:
-
-        st.metric(
+            "Sargassum tenerrimum",
             "Eggshell powder",
-            f"{eggshell:.1f}%"
-        )
+            "Recycled polypropylene"
+        ],
+        "Recommended composition (%)": [
+            alginate,
+            sargassum,
+            eggshell,
+            recycled_plastic
+        ],
+        "Role in composite": [
+            "Bead-forming polymer matrix",
+            "Natural biosorbent",
+            "Calcium-rich functional filler",
+            "Structural reinforcement"
+        ]
+    }
+)
 
-    with col4:
-
-        st.metric(
-            "Recycled PP",
-            f"{recycled_plastic:.1f}%"
-        )
+st.dataframe(
+    formulation_data,
+    use_container_width=True,
+    hide_index=True
+)
 
     # =================================================
     # ARCHITECTURE
