@@ -2323,12 +2323,9 @@ elif st.session_state.screen == "Performance Analytics":
             "System Health (%)"
         ]
 
-        st.dataframe(
-            forecast_display.round(1),
-            use_container_width=True,
-            hide_index=True
+    st.table(
+            forecast_display.round(1)
         )
-
         # -----------------------------
         # PERFORMANCE INTELLIGENCE
         # -----------------------------
