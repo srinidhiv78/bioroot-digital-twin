@@ -2574,7 +2574,151 @@ elif st.session_state.screen == "Scenario Simulator":
         # -----------------------------
         # LIVE DIGITAL TWIN OUTPUT
         # -----------------------------
+        # -----------------------------
+        # VIRTUAL TREATMENT FLOW
+        # -----------------------------
 
+        st.subheader("🌊 Virtual Treatment Flow")
+
+        flow_intensity = min(
+            1.0,
+            max(
+                0.2,
+                scenario_flow / 100
+            )
+        )
+
+        animation_speed = max(
+            0.3,
+            1.5 - flow_intensity
+        )
+
+        flow_html = f"""
+        <style>
+
+        .twin-container {{
+            background: #0b1220;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }}
+
+        .pipeline {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }}
+
+        .node {{
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 110px;
+            text-align: center;
+            background: #111827;
+            box-shadow: 0 0 12px rgba(56,189,248,0.35);
+        }}
+
+        .root {{
+            border-color: #22c55e;
+            box-shadow: 0 0 15px rgba(34,197,94,0.35);
+        }}
+
+        .outlet {{
+            border-color: #a78bfa;
+            box-shadow: 0 0 15px rgba(167,139,250,0.35);
+        }}
+
+        .arrow {{
+            font-size: 28px;
+            color: #38bdf8;
+            animation: pulse {animation_speed}s infinite;
+        }}
+
+        @keyframes pulse {{
+            0% {{ opacity: 0.25; }}
+            50% {{ opacity: 1; }}
+            100% {{ opacity: 0.25; }}
+        }}
+
+        .sensor {{
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }}
+
+        .sensor-box {{
+            background: #111827;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #334155;
+        }}
+
+        </style>
+
+        <div class="twin-container">
+
+            <div class="pipeline">
+
+                <div class="node">
+                    <b>INLET</b><br>
+                    <small>{scenario_flow} L/min</small>
+                </div>
+
+                <div class="arrow">➜</div>
+
+                <div class="node root">
+                    <b>ROOT REACTOR</b><br>
+                    <small>{design_data.get("branch_count", 6)} branches</small>
+                </div>
+
+                <div class="arrow">➜</div>
+
+                <div class="node root">
+                    <b>BIOBEADS</b><br>
+                    <small>{design_data.get("bead_size", 10)} mm</small>
+                </div>
+
+                <div class="arrow">➜</div>
+
+                <div class="node outlet">
+                    <b>OUTLET</b><br>
+                    <small>Virtual sensor</small>
+                </div>
+
+            </div>
+
+            <div class="sensor">
+
+                <div class="sensor-box">
+                    <b>PO₄ REMOVAL</b><br>
+                    {simulated_phosphate:.1f}%
+                </div>
+
+                <div class="sensor-box">
+                    <b>DYE REMOVAL</b><br>
+                    {simulated_dye:.1f}%
+                </div>
+
+                <div class="sensor-box">
+                    <b>HEALTH</b><br>
+                    {system_health:.1f}%
+                </div>
+
+            </div>
+
+        </div>
+        """
+
+        st.components.v1.html(
+            flow_html,
+            height=230
+        )
         st.subheader("🧬 Digital Twin Response")
 
         metric1, metric2, metric3, metric4 = st.columns(4)
