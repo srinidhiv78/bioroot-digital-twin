@@ -1,5 +1,6 @@
 import streamlit as st
 import math
+import pandas as pd
 
 st.set_page_config(
     page_title="BIOROOT | Digital Twin Platform",
@@ -400,7 +401,7 @@ elif st.session_state.screen == "Optimized Prediction":
     )
 
     # =====================================================
-    # INPUT EXTRACTION
+    # INPUTS
     # =====================================================
 
     diameter_mm = data["pipe_diameter"]
@@ -411,7 +412,7 @@ elif st.session_state.screen == "Optimized Prediction":
     priority = data["treatment_priority"]
 
     # =====================================================
-    # HYDRAULIC MODEL
+    # HYDRAULIC CALCULATIONS
     # =====================================================
 
     diameter_m = diameter_mm / 1000
@@ -425,39 +426,6 @@ elif st.session_state.screen == "Optimized Prediction":
     pipe_volume_l = pipe_area * length_m * 1000
 
     residence_time = pipe_volume_l / flow_l_min
-
-    # =====================================================
-    # NORMALIZED DESIGN FACTORS
-    # =====================================================
-
-    # Larger pipe = more treatment volume
-    diameter_factor = min(
-        1.5,
-        max(0.5, diameter_mm / 150)
-    )
-
-    # Longer pipe = more available treatment length
-    length_factor = min(
-        1.5,
-        max(0.5, length_m / 20)
-    )
-
-    # Higher flow = shorter contact time
-    flow_factor = min(
-        2.0,
-        max(0.4, flow_l_min / 50)
-    )
-
-    # Temperature influence for prototype kinetic adjustment
-    temperature_factor = 1 + (
-        (temperature - 27) * 0.01
-    )
-
-    # Pressure has a smaller architectural influence
-    pressure_factor = min(
-        1.3,
-        max(0.7, pressure)
-    )
 
     # =====================================================
     # BASE FORMULATION
@@ -504,24 +472,29 @@ elif st.session_state.screen == "Optimized Prediction":
         base_dye = 79
 
     # =====================================================
-    # FORMULATION ADAPTATION
+    # FORMULATION RESPONSE
     # =====================================================
 
-    # High flow → slightly more structural reinforcement
-    if flow_l_min > 75:
+    # Higher hydraulic stress → more structural reinforcement
+    hydraulic_stress = (
+        (flow_l_min / 50)
+        * (pressure / 1)
+    )
+
+    if hydraulic_stress > 1.5:
 
         plastic += 4
         alginate -= 2
         sargassum -= 1
         eggshell -= 1
 
-    elif flow_l_min < 30:
+    elif hydraulic_stress < 0.7:
 
-        plastic = max(6, plastic - 2)
+        plastic -= 2
         alginate += 1
         sargassum += 1
 
-    # Larger diameter → slightly more bead loading possible
+    # Larger pipe → greater treatment capacity
     if diameter_mm > 250:
 
         alginate += 2
@@ -535,14 +508,14 @@ elif st.session_state.screen == "Optimized Prediction":
         alginate -= 1
         sargassum -= 1
 
-    # High pressure → reinforce structure
+    # Higher pressure → structural reinforcement
     if pressure > 3:
 
         plastic += 2
         alginate -= 1
         eggshell -= 1
 
-    # Normalize formulation to exactly 100%
+    # Normalize to exactly 100%
     total = alginate + sargassum + eggshell + plastic
 
     alginate = round(alginate / total * 100)
@@ -552,61 +525,70 @@ elif st.session_state.screen == "Optimized Prediction":
     plastic = 100 - alginate - sargassum - eggshell
 
     # =====================================================
-    # BEAD SIZE
+    # RESPONSIVE BEAD DIAMETER
     # =====================================================
 
     bead_size = 9.0
 
-    if diameter_mm > 300:
-        bead_size += 2
+    # Pipe geometry
+    bead_size += (diameter_mm - 150) / 100
 
-    if flow_l_min > 75:
-        bead_size -= 1
+    # Flow effect
+    bead_size -= (flow_l_min - 50) / 80
 
-    if flow_l_min < 30:
-        bead_size += 1
+    # Pressure effect
+    bead_size -= (pressure - 1) * 0.25
 
-    if pressure > 3:
+    # Objective effect
+    if priority == "Maximum phosphate removal":
+        bead_size += 1.0
+
+    elif priority == "Maximum dye removal":
         bead_size -= 0.5
 
+    elif priority == "Minimum material requirement":
+        bead_size -= 1.0
+
+    # Keep realistic prototype range
     bead_size = max(
-        6,
-        min(14, bead_size)
+        5.0,
+        min(15.0, bead_size)
     )
 
     # =====================================================
-    # BEAD LOADING
+    # RESPONSIVE BEAD LOADING
     # =====================================================
 
-    bead_loading = 50
+    bead_loading = 50.0
 
-    bead_loading += diameter_factor * 8
-    bead_loading += length_factor * 5
-    bead_loading -= flow_factor * 6
+    bead_loading += (diameter_mm - 150) * 0.05
+    bead_loading += (length_m - 20) * 0.20
+    bead_loading -= (flow_l_min - 50) * 0.10
+    bead_loading += (pressure - 1) * 1.5
 
     if priority == "Maximum phosphate removal":
         bead_loading += 8
 
     elif priority == "Maximum dye removal":
-        bead_loading += 6
+        bead_loading += 5
 
     elif priority == "Minimum material requirement":
         bead_loading -= 10
 
     bead_loading = max(
-        30,
-        min(80, bead_loading)
+        25,
+        min(85, bead_loading)
     )
 
     # =====================================================
-    # ROOT ARCHITECTURE
+    # RESPONSIVE BRANCH COUNT
     # =====================================================
 
-    branches = 5
+    branches = 4
 
-    branches += round(diameter_factor * 2)
-    branches += round(length_factor)
-    branches -= round(flow_factor)
+    branches += diameter_mm / 75
+    branches += length_m / 12
+    branches -= flow_l_min / 80
 
     if priority == "Maximum phosphate removal":
         branches += 2
@@ -615,24 +597,57 @@ elif st.session_state.screen == "Optimized Prediction":
         branches += 1
 
     elif priority == "Minimum material requirement":
-        branches -= 2
+        branches -= 1
 
-    branches = max(
-        3,
-        min(14, branches)
+    branches = round(
+        max(3, min(16, branches))
+    )
+
+    # =====================================================
+    # RESPONSIVE BRANCH ANGLE
+    # =====================================================
+
+    # Base angle determined by hydraulic velocity
+    if velocity < 0.03:
+
+        branch_angle = 25
+
+    elif velocity < 0.06:
+
+        branch_angle = 35
+
+    elif velocity < 0.10:
+
+        branch_angle = 45
+
+    elif velocity < 0.18:
+
+        branch_angle = 55
+
+    else:
+
+        branch_angle = 65
+
+    # Pipe diameter adjustment
+    if diameter_mm > 300:
+        branch_angle += 5
+
+    elif diameter_mm < 100:
+        branch_angle -= 5
+
+    # Treatment objective adjustment
+    if priority == "Maximum phosphate removal":
+        branch_angle += 5
+
+    elif priority == "Minimum material requirement":
+        branch_angle -= 5
+
+    branch_angle = max(
+        20,
+        min(70, branch_angle)
     )
 
     branch_spacing = length_m / branches
-
-    # Higher flow → more aggressive branching angle
-    if flow_l_min > 100:
-        branch_angle = 50
-    elif flow_l_min > 60:
-        branch_angle = 45
-    elif flow_l_min < 30:
-        branch_angle = 30
-    else:
-        branch_angle = 35
 
     # =====================================================
     # PERFORMANCE MODEL
@@ -647,7 +662,7 @@ elif st.session_state.screen == "Optimized Prediction":
     )
 
     structural_factor = min(
-        1.25,
+        1.3,
         max(
             0.7,
             bead_loading / 55
@@ -662,13 +677,12 @@ elif st.session_state.screen == "Optimized Prediction":
         )
     )
 
-    # Prototype removal predictions
     phosphate_removal = (
         base_phosphate
         + 8 * (contact_factor - 1)
         + 5 * (structural_factor - 1)
         + (temperature - 27) * 0.12
-        + (diameter_factor - 1) * 3
+        + (diameter_mm / 150 - 1) * 3
         - hydraulic_penalty
     )
 
@@ -677,14 +691,11 @@ elif st.session_state.screen == "Optimized Prediction":
         + 8 * (contact_factor - 1)
         + 4 * (structural_factor - 1)
         + (temperature - 27) * 0.10
-        + (length_factor - 1) * 3
+        + (length_m / 20 - 1) * 3
         - hydraulic_penalty
     )
 
-    # =====================================================
-    # OPTIONAL CONCENTRATION EFFECT
-    # =====================================================
-
+    # Optional concentration effect
     if data["phosphate"] is not None:
 
         phosphate_load_factor = min(
@@ -713,9 +724,14 @@ elif st.session_state.screen == "Optimized Prediction":
             dye_load_factor - 1
         ) * 8
 
-    # Temperature and pressure adjustment
-    phosphate_removal *= temperature_factor
-    dye_removal *= temperature_factor
+    # Temperature adjustment
+    phosphate_removal *= (
+        1 + (temperature - 27) * 0.01
+    )
+
+    dye_removal *= (
+        1 + (temperature - 27) * 0.01
+    )
 
     phosphate_removal = max(
         20,
@@ -728,7 +744,7 @@ elif st.session_state.screen == "Optimized Prediction":
     )
 
     # =====================================================
-    # STORE DESIGN
+    # SAVE DESIGN
     # =====================================================
 
     st.session_state.design_data = {
@@ -753,7 +769,7 @@ elif st.session_state.screen == "Optimized Prediction":
     }
 
     # =====================================================
-    # SYSTEM STATUS
+    # STATUS
     # =====================================================
 
     st.success(
@@ -827,7 +843,7 @@ elif st.session_state.screen == "Optimized Prediction":
         )
 
     # =====================================================
-    # INPUT → DESIGN TRACE
+    # OPTIMIZATION TRACE
     # =====================================================
 
     st.markdown("---")
@@ -837,121 +853,92 @@ elif st.session_state.screen == "Optimized Prediction":
     trace1, trace2, trace3 = st.columns(3)
 
     with trace1:
+
         st.metric(
             "Hydraulic regime",
             f"{velocity:.3f} m/s"
         )
+
         st.caption(
-            "Derived from pipe diameter + wastewater flow"
+            "Calculated from pipe diameter and wastewater flow"
         )
 
     with trace2:
+
         st.metric(
-            "Available treatment volume",
+            "Treatment volume",
             f"{pipe_volume_l:.1f} L"
         )
+
         st.caption(
-            "Derived from pipe geometry + available length"
+            "Available pipe volume for treatment"
         )
 
     with trace3:
+
         st.metric(
-            "Design objective",
+            "Optimization objective",
             priority
         )
+
         st.caption(
-            "Optimization target selected by facility"
+            "Selected industrial treatment priority"
         )
 
     # =====================================================
-    # DESIGN TRADE-OFF GRAPH
+    # HYDRAULIC–TREATMENT RESPONSE GRAPH
     # =====================================================
 
     st.markdown("---")
 
-    st.markdown("### 📈 Design Trade-off Analysis")
-
-    chart_data = {
-        "Design": [
-            "Material Efficient",
-            "Balanced",
-            "High Treatment"
-        ],
-        "Treatment Index": [
-            max(0, phosphate_removal - 12),
-            phosphate_removal,
-            min(98, phosphate_removal + 7)
-        ],
-        "Material Utilization": [
-            65,
-            78,
-            92
-        ]
-    }
-
-    st.line_chart(
-        {
-            "Material Efficient": chart_data["Treatment Index"],
-            "Balanced": [
-                chart_data["Material Utilization"][0],
-                chart_data["Material Utilization"][1],
-                chart_data["Material Utilization"][2]
-            ],
-            "High Treatment": [
-                chart_data["Treatment Index"][0],
-                chart_data["Treatment Index"][1],
-                chart_data["Treatment Index"][2]
-            ]
-        }
-    )
+    st.markdown("### 📈 Hydraulic–Treatment Response")
 
     st.caption(
-        "Prototype design-space visualization. Curves represent "
-        "optimization trade-offs rather than experimentally validated "
-        "performance data."
+        "Prototype sensitivity analysis: predicted treatment efficiency "
+        "as wastewater flow rate changes while the current pipe geometry "
+        "and treatment configuration are held constant."
     )
 
-    # =====================================================
-    # DIGITAL TWIN HANDOFF
-    # =====================================================
-
-    st.markdown("---")
-
-    st.markdown("### 🔄 Digital Twin Handoff")
-
-    st.write(
-        "The optimized architecture has been instantiated from the "
-        "current facility configuration and is ready for virtual "
-        "operation."
+    # Flow range around current operating point
+    minimum_flow = max(
+        5,
+        flow_l_min * 0.4
     )
 
-    if st.button(
-        "▶ LAUNCH DIGITAL TWIN CONTROL ROOM",
-        use_container_width=True
-    ):
+    maximum_flow = flow_l_min * 1.8
 
-        st.session_state.screen = "Digital Twin Control Room"
-        st.rerun()
+    flow_values = [
+        minimum_flow + (
+            maximum_flow - minimum_flow
+        ) * i / 19
+        for i in range(20)
+    ]
 
-    if st.button("← Back to Industry Portal"):
+    phosphate_curve = []
+    dye_curve = []
 
-        st.session_state.screen = "Industry Portal"
-        st.rerun()
+    for test_flow in flow_values:
 
+        test_flow_m3_s = test_flow / 1000 / 60
 
-# =========================================================
-# OTHER SCREENS
-# =========================================================
+        test_velocity = (
+            test_flow_m3_s / pipe_area
+        )
 
-else:
+        test_volume = pipe_area * length_m * 1000
 
-    st.title(f"🌱 {st.session_state.screen}")
+        test_residence = (
+            test_volume / test_flow
+        )
 
-    st.info(
-        "This module will be built in the next development step."
-    )
+        test_contact = min(
+            1.5,
+            max(
+                0.4,
+                test_residence / 7
+            )
+        )
 
-    if st.button("← Back"):
-
-        st.session_state.screen = "Optimized Prediction"
-        st.rerun()
+        test_penalty = min(
+            25,
+            max(
