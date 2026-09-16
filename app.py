@@ -2748,7 +2748,180 @@ elif st.session_state.screen == "Scenario Simulator":
         # -----------------------------
         # SYSTEM STATE
         # -----------------------------
+        # -----------------------------
+        # VIRTUAL ROOT ARCHITECTURE
+        # -----------------------------
 
+        st.subheader("🌿 Optimized Root Architecture")
+
+        branch_count = int(
+            design_data.get(
+                "branch_count",
+                6
+            )
+        )
+
+        branch_angle = design_data.get(
+            "branch_angle",
+            45
+        )
+
+        branch_spacing = design_data.get(
+            "branch_spacing",
+            20
+        )
+
+        bead_size = design_data.get(
+            "bead_size",
+            10
+        )
+
+        root_html = f"""
+        <style>
+
+        .root-system {{
+            background: #0b1220;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }}
+
+        .root-title {{
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }}
+
+        .root-network {{
+            position: relative;
+            height: 230px;
+            max-width: 700px;
+            margin: auto;
+        }}
+
+        .trunk {{
+            position: absolute;
+            width: 12px;
+            height: 170px;
+            background: #22c55e;
+            left: 50%;
+            top: 25px;
+            transform: translateX(-50%);
+            border-radius: 10px;
+            box-shadow: 0 0 14px rgba(34,197,94,0.5);
+        }}
+
+        .branch {{
+            position: absolute;
+            height: 7px;
+            width: 150px;
+            background: #38bdf8;
+            left: 50%;
+            top: 65px;
+            transform-origin: left center;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(56,189,248,0.45);
+        }}
+
+        .branch:nth-child(2) {{
+            transform: rotate(-{branch_angle}deg);
+        }}
+
+        .branch:nth-child(3) {{
+            transform: rotate({branch_angle}deg);
+        }}
+
+        .branch:nth-child(4) {{
+            top: 105px;
+            transform: rotate(-{branch_angle + 10}deg);
+        }}
+
+        .branch:nth-child(5) {{
+            top: 105px;
+            transform: rotate({branch_angle + 10}deg);
+        }}
+
+        .branch:nth-child(6) {{
+            top: 145px;
+            transform: rotate(-{branch_angle + 15}deg);
+        }}
+
+        .branch:nth-child(7) {{
+            top: 145px;
+            transform: rotate({branch_angle + 15}deg);
+        }}
+
+        .bead {{
+            position: absolute;
+            width: {max(8, bead_size)}px;
+            height: {max(8, bead_size)}px;
+            background: #f59e0b;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(245,158,11,0.7);
+        }}
+
+        .b1 {{ left: 35%; top: 55px; }}
+        .b2 {{ left: 65%; top: 70px; }}
+        .b3 {{ left: 30%; top: 105px; }}
+        .b4 {{ left: 70%; top: 120px; }}
+        .b5 {{ left: 42%; top: 150px; }}
+        .b6 {{ left: 58%; top: 165px; }}
+
+        .architecture-data {{
+            margin-top: 10px;
+            font-size: 13px;
+            color: #cbd5e1;
+        }}
+
+        </style>
+
+        <div class="root-system">
+
+            <div class="root-title">
+                Virtual Reactor Architecture
+            </div>
+
+            <div class="root-network">
+
+                <div class="trunk"></div>
+
+                <div class="branch"></div>
+                <div class="branch"></div>
+                <div class="branch"></div>
+                <div class="branch"></div>
+                <div class="branch"></div>
+                <div class="branch"></div>
+
+                <div class="bead b1"></div>
+                <div class="bead b2"></div>
+                <div class="bead b3"></div>
+                <div class="bead b4"></div>
+                <div class="bead b5"></div>
+                <div class="bead b6"></div>
+
+            </div>
+
+            <div class="architecture-data">
+
+                Branches: {branch_count}
+                &nbsp; | &nbsp;
+                Branch angle: {branch_angle}°
+                &nbsp; | &nbsp;
+                Spacing: {branch_spacing}
+                &nbsp; | &nbsp;
+                Bead diameter: {bead_size} mm
+
+            </div>
+
+        </div>
+        """
+
+        st.components.v1.html(
+            root_html,
+            height=300
+        )
         st.subheader("📡 Virtual Sensor State")
 
         sensor_col1, sensor_col2 = st.columns(2)
