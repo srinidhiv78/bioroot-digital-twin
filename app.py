@@ -628,17 +628,11 @@ elif st.session_state.screen == "Optimized Prediction":
         # =================================================
 
         phosphate_removal = (
-
             base_phosphate
-
             + 8 * (contact_factor - 1)
-
             + 5 * (structural_factor - 1)
-
             + (temperature - 27) * 0.12
-
             + (diameter_mm / 150 - 1) * 3
-
             - max(
                 0,
                 (flow_l_min - 50) * 0.12
@@ -646,17 +640,11 @@ elif st.session_state.screen == "Optimized Prediction":
         )
 
         dye_removal = (
-
             base_dye
-
             + 8 * (contact_factor - 1)
-
             + 4 * (structural_factor - 1)
-
             + (temperature - 27) * 0.10
-
             + (length_m / 20 - 1) * 3
-
             - max(
                 0,
                 (flow_l_min - 50) * 0.12
@@ -696,22 +684,17 @@ elif st.session_state.screen == "Optimized Prediction":
         # =================================================
 
         st.session_state.design_data = {
-
             "alginate": alginate,
             "sargassum": sargassum,
             "eggshell": eggshell,
             "recycled_plastic": recycled_plastic,
-
             "bead_size": bead_size,
             "bead_loading": bead_loading,
-
             "branch_count": branch_count,
             "branch_angle": branch_angle,
             "branch_spacing": branch_spacing,
-
             "velocity": velocity,
             "residence_time": residence_time,
-
             "phosphate_removal": phosphate_removal,
             "dye_removal": dye_removal
         }
@@ -890,14 +873,12 @@ elif st.session_state.screen == "Optimized Prediction":
                     "Eggshell powder",
                     "Recycled polypropylene"
                 ],
-
                 "Recommended composition (%)": [
                     alginate,
                     sargassum,
                     eggshell,
                     recycled_plastic
                 ],
-
                 "Role in composite": [
                     "Bead-forming polymer matrix",
                     "Natural biosorbent",
@@ -977,7 +958,6 @@ elif st.session_state.screen == "Optimized Prediction":
                     "Residence time",
                     "Structural factor"
                 ],
-
                 "Input / calculated value": [
                     f"{flow_l_min:.1f} L/min",
                     f"{diameter_mm:.1f} mm",
@@ -987,7 +967,6 @@ elif st.session_state.screen == "Optimized Prediction":
                     f"{residence_time:.2f} min",
                     f"{structural_factor:.3f}"
                 ],
-
                 "Design response": [
                     "Hydraulic loading",
                     "Root capacity",
@@ -1038,17 +1017,11 @@ elif st.session_state.screen == "Optimized Prediction":
             )
 
             test_phosphate = (
-
                 base_phosphate
-
                 + 8 * (test_contact_factor - 1)
-
                 + 5 * (structural_factor - 1)
-
                 + (temperature - 27) * 0.12
-
                 + (diameter_mm / 150 - 1) * 3
-
                 - max(
                     0,
                     (test_flow - 50) * 0.12
@@ -1056,17 +1029,11 @@ elif st.session_state.screen == "Optimized Prediction":
             )
 
             test_dye = (
-
                 base_dye
-
                 + 8 * (test_contact_factor - 1)
-
                 + 4 * (structural_factor - 1)
-
                 + (temperature - 27) * 0.10
-
                 + (length_m / 20 - 1) * 3
-
                 - max(
                     0,
                     (test_flow - 50) * 0.12
@@ -1244,33 +1211,28 @@ elif st.session_state.screen == "Digital Twin Control Room":
 
         t = simulation_time
 
-        # Flow disturbance over simulation time
         dynamic_flow = (
             base_flow
             + 8 * math.sin(t / 7)
             + 2 * math.sin(t / 2.5)
         )
 
-        # Temperature variation
         dynamic_temperature = (
             base_temperature
             + 1.2 * math.sin(t / 11)
         )
 
-        # Pressure response
         dynamic_pressure = (
             base_pressure
             + 0.06 * math.sin(t / 6)
             + (dynamic_flow - base_flow) * 0.002
         )
 
-        # Hydraulic residence time
         dynamic_residence = (
             base_residence_time
             * (base_flow / max(dynamic_flow, 1))
         )
 
-        # Hydraulic loading factor
         hydraulic_factor = (
             base_flow / max(dynamic_flow, 1)
         )
@@ -1280,14 +1242,12 @@ elif st.session_state.screen == "Digital Twin Control Room":
             min(1.20, hydraulic_factor)
         )
 
-        # Temperature effect
         temperature_factor = (
             1
             + (dynamic_temperature - base_temperature)
             * 0.012
         )
 
-        # Virtual bead utilization increases gradually
         dynamic_bead_loading = (
             base_bead_loading
             + (t / 60) * 5
@@ -1314,7 +1274,6 @@ elif st.session_state.screen == "Digital Twin Control Room":
             * temperature_factor
         )
 
-        # Gradual performance decline with bead utilization
         lifecycle_penalty = max(
             0,
             (dynamic_bead_loading - 18) * 0.25
@@ -1476,7 +1435,6 @@ elif st.session_state.screen == "Digital Twin Control Room":
 
         with process_col2:
 
-            # Animated CSS wastewater particles
             animation_duration = max(
                 0.8,
                 2.5 - dynamic_flow / 100
@@ -2021,7 +1979,6 @@ elif st.session_state.screen == "Digital Twin Control Room":
                     "Virtual sensors",
                     "Calibration"
                 ],
-
                 "Status": [
                     "ACTIVE",
                     "ACTIVE",
@@ -2109,9 +2066,6 @@ elif st.session_state.screen == "Digital Twin Control Room":
                 time.sleep(0.25)
 
                 st.rerun()
-# =================================================
-# PERFORMANCE ANALYTICS
-# =================================================
 
 # =================================================
 # PERFORMANCE ANALYTICS
@@ -2120,12 +2074,20 @@ elif st.session_state.screen == "Digital Twin Control Room":
 elif st.session_state.screen == "Performance Analytics":
 
     st.header("📊 Performance Analytics")
+
     st.caption(
         "Real-time performance intelligence and forward treatment trajectory"
     )
 
-    facility_data = st.session_state.get("facility_data", {})
-    design_data = st.session_state.get("design_data", {})
+    facility_data = st.session_state.get(
+        "facility_data",
+        {}
+    )
+
+    design_data = st.session_state.get(
+        "design_data",
+        {}
+    )
 
     if not facility_data or not design_data:
 
@@ -2140,7 +2102,10 @@ elif st.session_state.screen == "Performance Analytics":
         # BASE SYSTEM PARAMETERS
         # -----------------------------
 
-        base_flow = facility_data.get("flow_l_min", 55)
+        base_flow = facility_data.get(
+            "flow_l_min",
+            55
+        )
 
         base_phosphate = design_data.get(
             "phosphate_removal",
@@ -2345,7 +2310,7 @@ elif st.session_state.screen == "Performance Analytics":
             "Phosphate Removal"
         ]
 
-             if future_health > 85:
+        if future_health > 85:
 
             st.success(
                 f"System trajectory remains stable. "
@@ -2366,8 +2331,6 @@ elif st.session_state.screen == "Performance Analytics":
             st.error(
                 f"Potential intervention window detected. "
                 f"Projected system health: "
-                f"{future_health:.1f}%."
-            )
                 f"{future_health:.1f}%."
             )
 
@@ -2468,6 +2431,7 @@ elif st.session_state.screen == "Scenario Simulator":
     )
 
     if st.button("← Back"):
+
         st.session_state.screen = "Optimized Prediction"
         st.rerun()
 
@@ -2485,5 +2449,6 @@ elif st.session_state.screen == "Regeneration & Lifecycle":
     )
 
     if st.button("← Back"):
+
         st.session_state.screen = "Optimized Prediction"
         st.rerun()
