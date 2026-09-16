@@ -93,11 +93,8 @@ st.markdown("""
 with st.sidebar:
 
     st.markdown("## 🌱 BIOROOT")
-
     st.caption("Circular Wastewater Intelligence Platform")
-
     st.markdown("---")
-
     st.markdown("### SYSTEM WORKFLOW")
 
     screens = [
@@ -282,7 +279,7 @@ if st.session_state.screen == "Industry Portal":
         )
 
     # -----------------------------------------------------
-    # OPTIONAL WATER QUALITY
+    # WASTEWATER CHARACTERIZATION
     # -----------------------------------------------------
 
     st.markdown(
@@ -341,18 +338,13 @@ if st.session_state.screen == "Industry Portal":
             "for this prototype."
         )
 
-    st.markdown("---")
-
     # -----------------------------------------------------
     # INITIALIZATION
     # -----------------------------------------------------
 
-    st.markdown("### 🚀 System Initialization")
+    st.markdown("---")
 
-    st.write(
-        "The entered facility parameters will be transferred to the "
-        "BIOROOT optimization and digital-twin environment."
-    )
+    st.markdown("### 🚀 System Initialization")
 
     if st.button(
         "🚀 INITIALIZE BIOROOT DIGITAL TWIN",
@@ -393,9 +385,7 @@ elif st.session_state.screen == "Optimized Prediction":
 
     <h1>🧠 OPTIMIZED PREDICTION</h1>
 
-    <p>
-    BIOROOT Adaptive Treatment Architecture Engine
-    </p>
+    <p>BIOROOT Adaptive Treatment Architecture Engine</p>
 
     <p>
     HYDRAULIC + MATERIAL + TREATMENT PARAMETER OPTIMIZATION
@@ -409,100 +399,323 @@ elif st.session_state.screen == "Optimized Prediction":
         "demonstration estimates and require experimental calibration."
     )
 
-    # -----------------------------------------------------
-    # HYDRAULIC CALCULATION
-    # -----------------------------------------------------
+    # =====================================================
+    # INPUT EXTRACTION
+    # =====================================================
 
-    diameter_m = data["pipe_diameter"] / 1000
-
-    area = math.pi * (diameter_m / 2) ** 2
-
-    flow_m3_s = data["flow_rate"] / 1000 / 60
-
-    velocity = flow_m3_s / area
-
-    pipe_volume_l = area * data["pipe_length"] * 1000
-
-    residence_time = pipe_volume_l / data["flow_rate"]
-
-    # -----------------------------------------------------
-    # BASE OPTIMIZATION
-    # -----------------------------------------------------
-
+    diameter_mm = data["pipe_diameter"]
+    length_m = data["pipe_length"]
+    flow_l_min = data["flow_rate"]
+    temperature = data["temperature"]
+    pressure = data["operating_pressure"]
     priority = data["treatment_priority"]
+
+    # =====================================================
+    # HYDRAULIC MODEL
+    # =====================================================
+
+    diameter_m = diameter_mm / 1000
+
+    pipe_area = math.pi * (diameter_m / 2) ** 2
+
+    flow_m3_s = flow_l_min / 1000 / 60
+
+    velocity = flow_m3_s / pipe_area
+
+    pipe_volume_l = pipe_area * length_m * 1000
+
+    residence_time = pipe_volume_l / flow_l_min
+
+    # =====================================================
+    # NORMALIZED DESIGN FACTORS
+    # =====================================================
+
+    # Larger pipe = more treatment volume
+    diameter_factor = min(
+        1.5,
+        max(0.5, diameter_mm / 150)
+    )
+
+    # Longer pipe = more available treatment length
+    length_factor = min(
+        1.5,
+        max(0.5, length_m / 20)
+    )
+
+    # Higher flow = shorter contact time
+    flow_factor = min(
+        2.0,
+        max(0.4, flow_l_min / 50)
+    )
+
+    # Temperature influence for prototype kinetic adjustment
+    temperature_factor = 1 + (
+        (temperature - 27) * 0.01
+    )
+
+    # Pressure has a smaller architectural influence
+    pressure_factor = min(
+        1.3,
+        max(0.7, pressure)
+    )
+
+    # =====================================================
+    # BASE FORMULATION
+    # =====================================================
 
     if priority == "Maximum phosphate removal":
 
-        alginate = 35
-        sargassum = 35
+        alginate = 34
+        sargassum = 38
         eggshell = 20
-        plastic = 10
+        plastic = 8
 
-        phosphate_base = 86
-        dye_base = 68
-
-        branches = 8
-        bead_size = 10
+        base_phosphate = 84
+        base_dye = 70
 
     elif priority == "Maximum dye removal":
 
-        alginate = 40
-        sargassum = 35
-        eggshell = 15
+        alginate = 39
+        sargassum = 37
+        eggshell = 14
         plastic = 10
 
-        phosphate_base = 72
-        dye_base = 88
-
-        branches = 7
-        bead_size = 8
+        base_phosphate = 70
+        base_dye = 86
 
     elif priority == "Minimum material requirement":
 
-        alginate = 40
+        alginate = 42
         sargassum = 30
-        eggshell = 20
+        eggshell = 18
         plastic = 10
 
-        phosphate_base = 68
-        dye_base = 70
-
-        branches = 5
-        bead_size = 8
+        base_phosphate = 65
+        base_dye = 68
 
     else:
 
         alginate = 38
-        sargassum = 32
-        eggshell = 20
+        sargassum = 33
+        eggshell = 19
         plastic = 10
 
-        phosphate_base = 78
-        dye_base = 80
+        base_phosphate = 77
+        base_dye = 79
 
-        branches = 6
-        bead_size = 9
+    # =====================================================
+    # FORMULATION ADAPTATION
+    # =====================================================
 
-    # -----------------------------------------------------
-    # HYDRAULIC ADJUSTMENT
-    # -----------------------------------------------------
+    # High flow → slightly more structural reinforcement
+    if flow_l_min > 75:
 
-    reference_flow = 50.0
+        plastic += 4
+        alginate -= 2
+        sargassum -= 1
+        eggshell -= 1
 
-    flow_factor = reference_flow / max(data["flow_rate"], 1)
+    elif flow_l_min < 30:
 
-    hydraulic_adjustment = 10 * (flow_factor - 1)
+        plastic = max(6, plastic - 2)
+        alginate += 1
+        sargassum += 1
 
-    phosphate_removal = phosphate_base + hydraulic_adjustment
+    # Larger diameter → slightly more bead loading possible
+    if diameter_mm > 250:
 
-    dye_removal = dye_base + hydraulic_adjustment
+        alginate += 2
+        sargassum += 1
+        plastic -= 2
+        eggshell -= 1
 
-    temperature_adjustment = (
-        (data["temperature"] - 27.0) * 0.15
+    elif diameter_mm < 100:
+
+        plastic += 2
+        alginate -= 1
+        sargassum -= 1
+
+    # High pressure → reinforce structure
+    if pressure > 3:
+
+        plastic += 2
+        alginate -= 1
+        eggshell -= 1
+
+    # Normalize formulation to exactly 100%
+    total = alginate + sargassum + eggshell + plastic
+
+    alginate = round(alginate / total * 100)
+    sargassum = round(sargassum / total * 100)
+    eggshell = round(eggshell / total * 100)
+
+    plastic = 100 - alginate - sargassum - eggshell
+
+    # =====================================================
+    # BEAD SIZE
+    # =====================================================
+
+    bead_size = 9.0
+
+    if diameter_mm > 300:
+        bead_size += 2
+
+    if flow_l_min > 75:
+        bead_size -= 1
+
+    if flow_l_min < 30:
+        bead_size += 1
+
+    if pressure > 3:
+        bead_size -= 0.5
+
+    bead_size = max(
+        6,
+        min(14, bead_size)
     )
 
-    phosphate_removal += temperature_adjustment
-    dye_removal += temperature_adjustment
+    # =====================================================
+    # BEAD LOADING
+    # =====================================================
+
+    bead_loading = 50
+
+    bead_loading += diameter_factor * 8
+    bead_loading += length_factor * 5
+    bead_loading -= flow_factor * 6
+
+    if priority == "Maximum phosphate removal":
+        bead_loading += 8
+
+    elif priority == "Maximum dye removal":
+        bead_loading += 6
+
+    elif priority == "Minimum material requirement":
+        bead_loading -= 10
+
+    bead_loading = max(
+        30,
+        min(80, bead_loading)
+    )
+
+    # =====================================================
+    # ROOT ARCHITECTURE
+    # =====================================================
+
+    branches = 5
+
+    branches += round(diameter_factor * 2)
+    branches += round(length_factor)
+    branches -= round(flow_factor)
+
+    if priority == "Maximum phosphate removal":
+        branches += 2
+
+    elif priority == "Maximum dye removal":
+        branches += 1
+
+    elif priority == "Minimum material requirement":
+        branches -= 2
+
+    branches = max(
+        3,
+        min(14, branches)
+    )
+
+    branch_spacing = length_m / branches
+
+    # Higher flow → more aggressive branching angle
+    if flow_l_min > 100:
+        branch_angle = 50
+    elif flow_l_min > 60:
+        branch_angle = 45
+    elif flow_l_min < 30:
+        branch_angle = 30
+    else:
+        branch_angle = 35
+
+    # =====================================================
+    # PERFORMANCE MODEL
+    # =====================================================
+
+    contact_factor = min(
+        1.5,
+        max(
+            0.4,
+            residence_time / 7
+        )
+    )
+
+    structural_factor = min(
+        1.25,
+        max(
+            0.7,
+            bead_loading / 55
+        )
+    )
+
+    hydraulic_penalty = min(
+        25,
+        max(
+            0,
+            (flow_l_min - 50) * 0.12
+        )
+    )
+
+    # Prototype removal predictions
+    phosphate_removal = (
+        base_phosphate
+        + 8 * (contact_factor - 1)
+        + 5 * (structural_factor - 1)
+        + (temperature - 27) * 0.12
+        + (diameter_factor - 1) * 3
+        - hydraulic_penalty
+    )
+
+    dye_removal = (
+        base_dye
+        + 8 * (contact_factor - 1)
+        + 4 * (structural_factor - 1)
+        + (temperature - 27) * 0.10
+        + (length_factor - 1) * 3
+        - hydraulic_penalty
+    )
+
+    # =====================================================
+    # OPTIONAL CONCENTRATION EFFECT
+    # =====================================================
+
+    if data["phosphate"] is not None:
+
+        phosphate_load_factor = min(
+            1.3,
+            max(
+                0.7,
+                data["phosphate"] / 50
+            )
+        )
+
+        phosphate_removal -= (
+            phosphate_load_factor - 1
+        ) * 8
+
+    if data["dye_concentration"] is not None:
+
+        dye_load_factor = min(
+            1.3,
+            max(
+                0.7,
+                data["dye_concentration"] / 40
+            )
+        )
+
+        dye_removal -= (
+            dye_load_factor - 1
+        ) * 8
+
+    # Temperature and pressure adjustment
+    phosphate_removal *= temperature_factor
+    dye_removal *= temperature_factor
 
     phosphate_removal = max(
         20,
@@ -514,35 +727,9 @@ elif st.session_state.screen == "Optimized Prediction":
         min(95, dye_removal)
     )
 
-    # -----------------------------------------------------
-    # ARCHITECTURE ADJUSTMENT
-    # -----------------------------------------------------
-
-    if velocity > 0.15:
-
-        branches += 2
-
-    elif velocity < 0.03:
-
-        branches = max(4, branches - 1)
-
-    branches = min(branches, 12)
-
-    branch_spacing = data["pipe_length"] / branches
-
-    branch_angle = 35 if velocity < 0.10 else 45
-
-    bead_loading = min(
-        80,
-        max(
-            35,
-            55 + (data["flow_rate"] - 50) * 0.2
-        )
-    )
-
-    # -----------------------------------------------------
+    # =====================================================
     # STORE DESIGN
-    # -----------------------------------------------------
+    # =====================================================
 
     st.session_state.design_data = {
 
@@ -565,18 +752,18 @@ elif st.session_state.screen == "Optimized Prediction":
         "dye_removal": dye_removal
     }
 
-    # -----------------------------------------------------
-    # STATUS
-    # -----------------------------------------------------
+    # =====================================================
+    # SYSTEM STATUS
+    # =====================================================
 
     st.success(
-        "✓ OPTIMIZATION COMPLETE — DESIGN GENERATED FROM CURRENT "
-        "FACILITY CONDITIONS"
+        "✓ OPTIMIZATION COMPLETE — DESIGN GENERATED FROM "
+        "CURRENT FACILITY CONDITIONS"
     )
 
-    # -----------------------------------------------------
+    # =====================================================
     # PERFORMANCE
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown("### 📊 Predicted Treatment Performance")
 
@@ -602,9 +789,9 @@ elif st.session_state.screen == "Optimized Prediction":
         f"{velocity:.3f} m/s"
     )
 
-    # -----------------------------------------------------
-    # MATERIAL FORMULATION
-    # -----------------------------------------------------
+    # =====================================================
+    # FORMULATION
+    # =====================================================
 
     st.markdown("---")
 
@@ -630,7 +817,7 @@ elif st.session_state.screen == "Optimized Prediction":
         st.markdown(
             '<div class="section-card">'
             '<h4>STRUCTURAL PARAMETERS</h4>'
-            f'<p>Bead diameter: <b>{bead_size} mm</b></p>'
+            f'<p>Bead diameter: <b>{bead_size:.1f} mm</b></p>'
             f'<p>Bead loading: <b>{bead_loading:.1f}%</b></p>'
             f'<p>Branch count: <b>{branches}</b></p>'
             f'<p>Branch spacing: <b>{branch_spacing:.2f} m</b></p>'
@@ -639,17 +826,103 @@ elif st.session_state.screen == "Optimized Prediction":
             unsafe_allow_html=True
         )
 
-    # -----------------------------------------------------
+    # =====================================================
+    # INPUT → DESIGN TRACE
+    # =====================================================
+
+    st.markdown("---")
+
+    st.markdown("### 🔬 Optimization Trace")
+
+    trace1, trace2, trace3 = st.columns(3)
+
+    with trace1:
+        st.metric(
+            "Hydraulic regime",
+            f"{velocity:.3f} m/s"
+        )
+        st.caption(
+            "Derived from pipe diameter + wastewater flow"
+        )
+
+    with trace2:
+        st.metric(
+            "Available treatment volume",
+            f"{pipe_volume_l:.1f} L"
+        )
+        st.caption(
+            "Derived from pipe geometry + available length"
+        )
+
+    with trace3:
+        st.metric(
+            "Design objective",
+            priority
+        )
+        st.caption(
+            "Optimization target selected by facility"
+        )
+
+    # =====================================================
+    # DESIGN TRADE-OFF GRAPH
+    # =====================================================
+
+    st.markdown("---")
+
+    st.markdown("### 📈 Design Trade-off Analysis")
+
+    chart_data = {
+        "Design": [
+            "Material Efficient",
+            "Balanced",
+            "High Treatment"
+        ],
+        "Treatment Index": [
+            max(0, phosphate_removal - 12),
+            phosphate_removal,
+            min(98, phosphate_removal + 7)
+        ],
+        "Material Utilization": [
+            65,
+            78,
+            92
+        ]
+    }
+
+    st.line_chart(
+        {
+            "Material Efficient": chart_data["Treatment Index"],
+            "Balanced": [
+                chart_data["Material Utilization"][0],
+                chart_data["Material Utilization"][1],
+                chart_data["Material Utilization"][2]
+            ],
+            "High Treatment": [
+                chart_data["Treatment Index"][0],
+                chart_data["Treatment Index"][1],
+                chart_data["Treatment Index"][2]
+            ]
+        }
+    )
+
+    st.caption(
+        "Prototype design-space visualization. Curves represent "
+        "optimization trade-offs rather than experimentally validated "
+        "performance data."
+    )
+
+    # =====================================================
     # DIGITAL TWIN HANDOFF
-    # -----------------------------------------------------
+    # =====================================================
 
     st.markdown("---")
 
     st.markdown("### 🔄 Digital Twin Handoff")
 
     st.write(
-        "The optimized architecture is ready to be instantiated "
-        "inside the BIOROOT virtual operating environment."
+        "The optimized architecture has been instantiated from the "
+        "current facility configuration and is ready for virtual "
+        "operation."
     )
 
     if st.button(
@@ -658,13 +931,11 @@ elif st.session_state.screen == "Optimized Prediction":
     ):
 
         st.session_state.screen = "Digital Twin Control Room"
-
         st.rerun()
 
     if st.button("← Back to Industry Portal"):
 
         st.session_state.screen = "Industry Portal"
-
         st.rerun()
 
 
@@ -683,5 +954,4 @@ else:
     if st.button("← Back"):
 
         st.session_state.screen = "Optimized Prediction"
-
         st.rerun()
