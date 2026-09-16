@@ -1,4 +1,5 @@
 import streamlit as st
+import math
 
 st.set_page_config(
     page_title="BIOROOT | Digital Twin Platform",
@@ -18,6 +19,9 @@ if "initialized" not in st.session_state:
 
 if "facility_data" not in st.session_state:
     st.session_state.facility_data = {}
+
+if "design_data" not in st.session_state:
+    st.session_state.design_data = {}
 
 
 # =========================================================
@@ -83,7 +87,7 @@ st.markdown("""
 
 
 # =========================================================
-# SIDEBAR NAVIGATION
+# SIDEBAR
 # =========================================================
 
 with st.sidebar:
@@ -107,10 +111,18 @@ with st.sidebar:
 
     for i, screen_name in enumerate(screens, 1):
 
+        enabled = (
+            screen_name == "Industry Portal"
+            or (
+                screen_name == "Optimized Prediction"
+                and st.session_state.initialized
+            )
+        )
+
         if st.button(
             f"{i:02d}  {screen_name}",
             use_container_width=True,
-            disabled=(screen_name != "Industry Portal")
+            disabled=not enabled
         ):
             st.session_state.screen = screen_name
 
@@ -142,9 +154,7 @@ if st.session_state.screen == "Industry Portal":
 
     <h1>🌱 BIOROOT</h1>
 
-    <p>
-    AI-Enabled Digital Twin for Circular Wastewater Treatment
-    </p>
+    <p>AI-Enabled Digital Twin for Circular Wastewater Treatment</p>
 
     <p>
     INDUSTRIAL CONFIGURATION & DIGITAL TWIN INITIALIZATION PORTAL
@@ -158,10 +168,9 @@ if st.session_state.screen == "Industry Portal":
         "outputs and require calibration against experimental treatment data."
     )
 
-
-    # =====================================================
+    # -----------------------------------------------------
     # FACILITY PROFILE
-    # =====================================================
+    # -----------------------------------------------------
 
     st.markdown(
         '<div class="section-card">'
@@ -175,14 +184,12 @@ if st.session_state.screen == "Industry Portal":
     col1, col2, col3 = st.columns(3)
 
     with col1:
-
         facility_id = st.text_input(
             "Facility / Plant ID",
             value="PLANT-001"
         )
 
     with col2:
-
         application = st.selectbox(
             "Industrial Sector",
             [
@@ -195,7 +202,6 @@ if st.session_state.screen == "Industry Portal":
         )
 
     with col3:
-
         operating_hours = st.number_input(
             "Daily operating hours",
             min_value=1.0,
@@ -204,10 +210,9 @@ if st.session_state.screen == "Industry Portal":
             step=1.0
         )
 
-
-    # =====================================================
-    # HYDRAULIC CONFIGURATION
-    # =====================================================
+    # -----------------------------------------------------
+    # HYDRAULIC PARAMETERS
+    # -----------------------------------------------------
 
     st.markdown(
         '<div class="section-card">'
@@ -276,16 +281,15 @@ if st.session_state.screen == "Industry Portal":
             ]
         )
 
-
-    # =====================================================
-    # WASTEWATER CHARACTERIZATION
-    # =====================================================
+    # -----------------------------------------------------
+    # OPTIONAL WATER QUALITY
+    # -----------------------------------------------------
 
     st.markdown(
         '<div class="section-card">'
         '<h3>🧪 Wastewater Characterization</h3>'
-        '<p>Optional measurements can be entered when available from '
-        'facility laboratory analysis.</p>'
+        '<p>Optional laboratory measurements can be entered when '
+        'available.</p>'
         '</div>',
         unsafe_allow_html=True
     )
@@ -299,7 +303,6 @@ if st.session_state.screen == "Industry Portal":
         col1, col2, col3 = st.columns(3)
 
         with col1:
-
             phosphate = st.number_input(
                 "Phosphate concentration (mg/L)",
                 min_value=0.0,
@@ -309,7 +312,6 @@ if st.session_state.screen == "Industry Portal":
             )
 
         with col2:
-
             dye_concentration = st.number_input(
                 "Dye / colour index (mg/L)",
                 min_value=0.0,
@@ -319,7 +321,6 @@ if st.session_state.screen == "Industry Portal":
             )
 
         with col3:
-
             organic_load = st.number_input(
                 "Organic load indicator (mg/L)",
                 min_value=0.0,
@@ -336,16 +337,15 @@ if st.session_state.screen == "Industry Portal":
 
         st.caption(
             "No laboratory concentration data entered. BIOROOT will "
-            "operate using the selected application profile and system "
-            "parameters for this prototype."
+            "use the selected application profile and system parameters "
+            "for this prototype."
         )
 
-
-    # =====================================================
-    # SYSTEM INITIALIZATION
-    # =====================================================
-
     st.markdown("---")
+
+    # -----------------------------------------------------
+    # INITIALIZATION
+    # -----------------------------------------------------
 
     st.markdown("### 🚀 System Initialization")
 
@@ -381,49 +381,285 @@ if st.session_state.screen == "Industry Portal":
 
 
 # =========================================================
-# OPTIMIZED PREDICTION PLACEHOLDER
+# OPTIMIZED PREDICTION
 # =========================================================
 
 elif st.session_state.screen == "Optimized Prediction":
 
-    st.title("🌱 Optimized Prediction")
+    data = st.session_state.facility_data
+
+    st.markdown("""
+    <div class="portal-header">
+
+    <h1>🧠 OPTIMIZED PREDICTION</h1>
+
+    <p>
+    BIOROOT Adaptive Treatment Architecture Engine
+    </p>
+
+    <p>
+    HYDRAULIC + MATERIAL + TREATMENT PARAMETER OPTIMIZATION
+    </p>
+
+    </div>
+    """, unsafe_allow_html=True)
 
     st.info(
-        "The optimization engine will be built in the next development step."
+        "Prototype optimization engine. Numerical outputs are "
+        "demonstration estimates and require experimental calibration."
     )
 
-    if st.session_state.facility_data:
+    # -----------------------------------------------------
+    # HYDRAULIC CALCULATION
+    # -----------------------------------------------------
 
-        st.markdown("### 📋 Received Industry Parameters")
+    diameter_m = data["pipe_diameter"] / 1000
 
-        data = st.session_state.facility_data
+    area = math.pi * (diameter_m / 2) ** 2
 
-        c1, c2, c3, c4 = st.columns(4)
+    flow_m3_s = data["flow_rate"] / 1000 / 60
 
-        c1.metric(
-            "Pipe diameter",
-            f"{data['pipe_diameter']:.0f} mm"
+    velocity = flow_m3_s / area
+
+    pipe_volume_l = area * data["pipe_length"] * 1000
+
+    residence_time = pipe_volume_l / data["flow_rate"]
+
+    # -----------------------------------------------------
+    # BASE OPTIMIZATION
+    # -----------------------------------------------------
+
+    priority = data["treatment_priority"]
+
+    if priority == "Maximum phosphate removal":
+
+        alginate = 35
+        sargassum = 35
+        eggshell = 20
+        plastic = 10
+
+        phosphate_base = 86
+        dye_base = 68
+
+        branches = 8
+        bead_size = 10
+
+    elif priority == "Maximum dye removal":
+
+        alginate = 40
+        sargassum = 35
+        eggshell = 15
+        plastic = 10
+
+        phosphate_base = 72
+        dye_base = 88
+
+        branches = 7
+        bead_size = 8
+
+    elif priority == "Minimum material requirement":
+
+        alginate = 40
+        sargassum = 30
+        eggshell = 20
+        plastic = 10
+
+        phosphate_base = 68
+        dye_base = 70
+
+        branches = 5
+        bead_size = 8
+
+    else:
+
+        alginate = 38
+        sargassum = 32
+        eggshell = 20
+        plastic = 10
+
+        phosphate_base = 78
+        dye_base = 80
+
+        branches = 6
+        bead_size = 9
+
+    # -----------------------------------------------------
+    # HYDRAULIC ADJUSTMENT
+    # -----------------------------------------------------
+
+    reference_flow = 50.0
+
+    flow_factor = reference_flow / max(data["flow_rate"], 1)
+
+    hydraulic_adjustment = 10 * (flow_factor - 1)
+
+    phosphate_removal = phosphate_base + hydraulic_adjustment
+
+    dye_removal = dye_base + hydraulic_adjustment
+
+    temperature_adjustment = (
+        (data["temperature"] - 27.0) * 0.15
+    )
+
+    phosphate_removal += temperature_adjustment
+    dye_removal += temperature_adjustment
+
+    phosphate_removal = max(
+        20,
+        min(95, phosphate_removal)
+    )
+
+    dye_removal = max(
+        20,
+        min(95, dye_removal)
+    )
+
+    # -----------------------------------------------------
+    # ARCHITECTURE ADJUSTMENT
+    # -----------------------------------------------------
+
+    if velocity > 0.15:
+
+        branches += 2
+
+    elif velocity < 0.03:
+
+        branches = max(4, branches - 1)
+
+    branches = min(branches, 12)
+
+    branch_spacing = data["pipe_length"] / branches
+
+    branch_angle = 35 if velocity < 0.10 else 45
+
+    bead_loading = min(
+        80,
+        max(
+            35,
+            55 + (data["flow_rate"] - 50) * 0.2
+        )
+    )
+
+    # -----------------------------------------------------
+    # STORE DESIGN
+    # -----------------------------------------------------
+
+    st.session_state.design_data = {
+
+        "alginate": alginate,
+        "sargassum": sargassum,
+        "eggshell": eggshell,
+        "plastic": plastic,
+
+        "branches": branches,
+        "bead_size": bead_size,
+        "bead_loading": bead_loading,
+
+        "branch_spacing": branch_spacing,
+        "branch_angle": branch_angle,
+
+        "velocity": velocity,
+        "residence_time": residence_time,
+
+        "phosphate_removal": phosphate_removal,
+        "dye_removal": dye_removal
+    }
+
+    # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
+
+    st.success(
+        "✓ OPTIMIZATION COMPLETE — DESIGN GENERATED FROM CURRENT "
+        "FACILITY CONDITIONS"
+    )
+
+    # -----------------------------------------------------
+    # PERFORMANCE
+    # -----------------------------------------------------
+
+    st.markdown("### 📊 Predicted Treatment Performance")
+
+    m1, m2, m3, m4 = st.columns(4)
+
+    m1.metric(
+        "Phosphate removal",
+        f"{phosphate_removal:.1f}%"
+    )
+
+    m2.metric(
+        "Dye removal",
+        f"{dye_removal:.1f}%"
+    )
+
+    m3.metric(
+        "Residence time",
+        f"{residence_time:.2f} min"
+    )
+
+    m4.metric(
+        "Flow velocity",
+        f"{velocity:.3f} m/s"
+    )
+
+    # -----------------------------------------------------
+    # MATERIAL FORMULATION
+    # -----------------------------------------------------
+
+    st.markdown("---")
+
+    st.markdown("### 🧪 Optimized Bead Formulation")
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.markdown(
+            '<div class="section-card">'
+            '<h4>COMPOSITE MATRIX</h4>'
+            f'<p>Sodium alginate: <b>{alginate}%</b></p>'
+            f'<p><i>Sargassum tenerrimum</i>: <b>{sargassum}%</b></p>'
+            f'<p>Eggshell powder: <b>{eggshell}%</b></p>'
+            f'<p>Recycled polypropylene: <b>{plastic}%</b></p>'
+            '</div>',
+            unsafe_allow_html=True
         )
 
-        c2.metric(
-            "Flow rate",
-            f"{data['flow_rate']:.0f} L/min"
+    with c2:
+
+        st.markdown(
+            '<div class="section-card">'
+            '<h4>STRUCTURAL PARAMETERS</h4>'
+            f'<p>Bead diameter: <b>{bead_size} mm</b></p>'
+            f'<p>Bead loading: <b>{bead_loading:.1f}%</b></p>'
+            f'<p>Branch count: <b>{branches}</b></p>'
+            f'<p>Branch spacing: <b>{branch_spacing:.2f} m</b></p>'
+            f'<p>Branch angle: <b>{branch_angle}°</b></p>'
+            '</div>',
+            unsafe_allow_html=True
         )
 
-        c3.metric(
-            "Temperature",
-            f"{data['temperature']:.1f} °C"
-        )
+    # -----------------------------------------------------
+    # DIGITAL TWIN HANDOFF
+    # -----------------------------------------------------
 
-        c4.metric(
-            "Pipe length",
-            f"{data['pipe_length']:.0f} m"
-        )
+    st.markdown("---")
 
-        st.success(
-            f"Facility {data['facility_id']} successfully transferred "
-            "to the optimization environment."
-        )
+    st.markdown("### 🔄 Digital Twin Handoff")
+
+    st.write(
+        "The optimized architecture is ready to be instantiated "
+        "inside the BIOROOT virtual operating environment."
+    )
+
+    if st.button(
+        "▶ LAUNCH DIGITAL TWIN CONTROL ROOM",
+        use_container_width=True
+    ):
+
+        st.session_state.screen = "Digital Twin Control Room"
+
+        st.rerun()
 
     if st.button("← Back to Industry Portal"):
 
@@ -433,7 +669,7 @@ elif st.session_state.screen == "Optimized Prediction":
 
 
 # =========================================================
-# OTHER PLACEHOLDER SCREENS
+# OTHER SCREENS
 # =========================================================
 
 else:
@@ -444,8 +680,8 @@ else:
         "This module will be built in the next development step."
     )
 
-    if st.button("← Back to Industry Portal"):
+    if st.button("← Back"):
 
-        st.session_state.screen = "Industry Portal"
+        st.session_state.screen = "Optimized Prediction"
 
         st.rerun()
