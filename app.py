@@ -2424,16 +2424,293 @@ elif st.session_state.screen == "Performance Analytics":
 elif st.session_state.screen == "Scenario Simulator":
 
     st.header("🧪 Scenario Simulator")
-
-    st.info(
-        "Scenario simulation will allow changes in flow, temperature, "
-        "pollutant loading and bead condition."
+    st.caption(
+        "Interactive digital-twin stress testing under changing operating conditions"
     )
 
-    if st.button("← Back"):
+    facility_data = st.session_state.get("facility_data", {})
+    design_data = st.session_state.get("design_data", {})
 
-        st.session_state.screen = "Optimized Prediction"
-        st.rerun()
+    if not facility_data or not design_data:
+
+        st.warning(
+            "Complete the Industry Portal and Optimized Prediction "
+            "modules before running scenarios."
+        )
+
+    else:
+
+        st.subheader("⚙️ Operating Conditions")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            scenario_flow = st.slider(
+                "Flow Rate (L/min)",
+                min_value=10,
+                max_value=150,
+                value=int(facility_data.get("flow_l_min", 50)),
+                step=5
+            )
+
+        with col2:
+            scenario_temperature = st.slider(
+                "Temperature (°C)",
+                min_value=15,
+                max_value=45,
+                value=int(facility_data.get("temperature", 30)),
+                step=1
+            )
+
+        with col3:
+            pollutant_load = st.slider(
+                "Pollutant Loading (%)",
+                min_value=25,
+                max_value=150,
+                value=100,
+                step=5
+            )
+
+        st.divider()
+
+        # -----------------------------
+        # DIGITAL TWIN RESPONSE MODEL
+        # -----------------------------
+
+        base_flow = facility_data.get(
+            "flow_l_min",
+            50
+        )
+
+        base_phosphate = design_data.get(
+            "phosphate_removal",
+            82
+        )
+
+        base_dye = design_data.get(
+            "dye_removal",
+            75
+        )
+
+        base_residence = design_data.get(
+            "residence_time",
+            5
+        )
+
+        # Hydraulic response
+        flow_ratio = scenario_flow / base_flow
+
+        simulated_residence = (
+            base_residence / flow_ratio
+        )
+
+        # Temperature response
+        temperature_factor = (
+            1
+            + 0.015 * (
+                scenario_temperature
+                - facility_data.get("temperature", 30)
+            )
+        )
+
+        # Hydraulic treatment penalty
+        hydraulic_factor = (
+            1 / (
+                1
+                + 0.18 * (
+                    flow_ratio - 1
+                )
+            )
+        )
+
+        # Pollutant loading effect
+        loading_factor = (
+            1
+            - 0.0015 * (
+                pollutant_load - 100
+            )
+        )
+
+        simulated_phosphate = min(
+            99,
+            max(
+                0,
+                base_phosphate
+                * hydraulic_factor
+                * temperature_factor
+                * loading_factor
+            )
+        )
+
+        simulated_dye = min(
+            99,
+            max(
+                0,
+                base_dye
+                * hydraulic_factor
+                * temperature_factor
+                * loading_factor
+            )
+        )
+
+        system_health = min(
+            100,
+            max(
+                50,
+                100
+                - 0.25 * abs(
+                    scenario_flow - base_flow
+                )
+                - 0.15 * abs(
+                    scenario_temperature
+                    - facility_data.get("temperature", 30)
+                )
+                - 0.12 * abs(
+                    pollutant_load - 100
+                )
+            )
+        )
+
+        # -----------------------------
+        # LIVE DIGITAL TWIN OUTPUT
+        # -----------------------------
+
+        st.subheader("🧬 Digital Twin Response")
+
+        metric1, metric2, metric3, metric4 = st.columns(4)
+
+        metric1.metric(
+            "Simulated PO₄ Removal",
+            f"{simulated_phosphate:.1f}%"
+        )
+
+        metric2.metric(
+            "Simulated Dye Removal",
+            f"{simulated_dye:.1f}%"
+        )
+
+        metric3.metric(
+            "Residence Time",
+            f"{simulated_residence:.2f} min"
+        )
+
+        metric4.metric(
+            "System Health",
+            f"{system_health:.1f}%"
+        )
+
+        st.divider()
+
+        # -----------------------------
+        # SYSTEM STATE
+        # -----------------------------
+
+        st.subheader("📡 Virtual Sensor State")
+
+        sensor_col1, sensor_col2 = st.columns(2)
+
+        with sensor_col1:
+
+            st.markdown("### Hydraulic Sensors")
+
+            st.write(
+                f"**Inlet flow:** {scenario_flow} L/min"
+            )
+
+            st.write(
+                f"**Flow ratio:** {flow_ratio:.2f}× baseline"
+            )
+
+            st.write(
+                f"**Estimated residence time:** "
+                f"{simulated_residence:.2f} min"
+            )
+
+        with sensor_col2:
+
+            st.markdown("### Process Sensors")
+
+            st.write(
+                f"**Temperature:** {scenario_temperature} °C"
+            )
+
+            st.write(
+                f"**Pollutant loading:** {pollutant_load}%"
+            )
+
+            st.write(
+                "**Twin state:** Dynamically recalculated"
+            )
+
+        st.divider()
+
+        # -----------------------------
+        # INTERVENTION LOGIC
+        # -----------------------------
+
+        st.subheader("🧠 AI Intervention Assessment")
+
+        if system_health >= 90:
+
+            st.success(
+                "Operating conditions remain within the "
+                "simulated optimal control envelope."
+            )
+
+        elif system_health >= 75:
+
+            st.info(
+                "Moderate process stress detected. "
+                "The digital twin predicts a manageable reduction "
+                "in treatment performance."
+            )
+
+        else:
+
+            st.warning(
+                "High process stress detected. "
+                "The digital twin recommends reviewing flow rate, "
+                "pollutant loading or bead configuration."
+            )
+
+        st.caption(
+            "Prototype digital-twin simulation. "
+            "Predictions require experimental calibration before deployment."
+        )
+
+        st.divider()
+
+        # -----------------------------
+        # NAVIGATION
+        # -----------------------------
+
+        col_back, col_next = st.columns(2)
+
+        with col_back:
+
+            if st.button(
+                "← Back to Performance Analytics",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Performance Analytics"
+                )
+
+                st.rerun()
+
+        with col_next:
+
+            if st.button(
+                "Continue to Regeneration & Lifecycle →",
+                use_container_width=True
+            ):
+
+                st.session_state.screen = (
+                    "Regeneration & Lifecycle"
+                )
+
+                st.rerun()
 
 # =================================================
 # REGENERATION & LIFECYCLE
